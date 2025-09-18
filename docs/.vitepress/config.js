@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
-  title: 'Avuer',
-  description: 'Avuer documenation',
+  title: 'varden',
+  description: 'varden documentation',
   themeConfig: {
     search: {
       provider: 'local',
