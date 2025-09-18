@@ -1,6 +1,5 @@
 import { expect, it, describe } from 'vitest';
 import { del, get, isArrayIndex } from './path.ts';
-import { undefined } from 'valibot';
 
 describe('path utilities', () => {
   it('should detect array index', () => {
