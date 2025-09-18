@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.2
+
+[compare changes](https://github.com/Solant/varden/compare/v0.1.1...v0.1.2)
+
+### 🏡 Chore
+
+- Add missing files ([382934d](https://github.com/Solant/varden/commit/382934d))
+
+### ❤️ Contributors
+
+- Solant <runner62v6@gmail.com>
+
 ## v0.1.1
 
 
