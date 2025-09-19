@@ -31,7 +31,7 @@ interface FieldMeta {
 }
 
 export interface FormContext<T> {
-  values: DeepReadonly<PartialDeep<T>>;
+  values: DeepReadonly<Ref<PartialDeep<T>>>;
   reset(): void;
   resetField<Path extends Paths<T>>(path: Path): void;
   setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value): void;
