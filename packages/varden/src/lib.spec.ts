@@ -21,4 +21,18 @@ describe('form reset', () => {
     form.reset();
     expect(form.values.value.name, 'John');
   });
+
+  it('should set dirty state for the form', () => {
+    const form = useForm({
+      initial: { name: 'John' },
+      schema: v.object({ name: v.string() }),
+      onSubmit(values) {
+        console.log(values);
+      },
+    });
+    expect(form.dirty.value).toBe(false);
+
+    form.setValue('name', 'Jane');
+    expect(form.dirty.value).toBe(true);
+  });
 });

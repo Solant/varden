@@ -32,6 +32,7 @@ interface FieldMeta {
 
 export interface FormContext<T> {
   values: DeepReadonly<Ref<PartialDeep<T>>>;
+  dirty: ComputedRef<boolean>;
   reset(): void;
   resetField<Path extends Paths<T>>(path: Path): void;
   setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value): void;
@@ -180,8 +181,18 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
 
   const useArrayField: FormContext<T>['useArrayField'] = (path) => [useArrayFieldValue(path)];
 
+  const dirty: FormContext<T>['dirty'] = computed<boolean>(() => {
+    for (const field in fields) {
+      if (fields[field]?.dirty === true) {
+        return true;
+      }
+    }
+    return false;
+  });
+
   return {
     values: readonly(currentValues) as FormContext<T>['values'],
+    dirty,
     meta: fields,
     reset,
     resetField,
@@ -190,6 +201,8 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
 
       if (fields[path]) {
         fields[path].dirty = get(initialValues, path) !== value;
+      } else {
+        fields[path] = { dirty: true, touched: false, error: '' };
       }
       applyValidation();
     },
