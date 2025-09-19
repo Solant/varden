@@ -10,6 +10,13 @@
       "require": "./dist/index.cjs"
     }
   },
+  "keywords": [
+    "vue",
+    "form",
+    "validation",
+    "type-safe",
+    "bundle-size"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Solant/varden.git"

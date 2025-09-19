@@ -1,5 +1,7 @@
 # varden
 
+[![bundle-size](https://deno.bundlejs.com/badge?q=varden&config={%22esbuild%22:{%22external%22:[%22vue%22]}})](https://bundlejs.com/?q=varden&config=%7B%22esbuild%22%3A%7B%22external%22%3A%5B%22vue%22%5D%7D%7D)
+
 `varden` is a form validation library for Vue 3. It is designed from the ground up to address some issues of other
 existing libraries, such as:
 
