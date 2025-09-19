@@ -1,5 +1,6 @@
 import { expect, it, describe } from 'vitest';
-import { del, get, isArrayIndex } from './path.ts';
+
+import { del, get, isArrayIndex, set } from './path';
 
 describe('path utilities', () => {
   it('should detect array index', () => {
@@ -39,5 +40,31 @@ describe('path utilities', () => {
     const value2 = { foo: { bar: { baz: 3 }, zab: 4 } };
     del(value2, 'foo.bar');
     expect(value2).toEqual({ foo: { zab: 4 } });
+  });
+
+  it("should not delete path that doesn't exist", () => {
+    const value = { foo: { bar: 2, baz: 3 } };
+    del(value, 'test1.test2.test3.test4');
+    expect(value).toEqual({ foo: { bar: 2, baz: 3 } });
+  });
+
+  it('should set value by path', () => {
+    const test = { foo: { bar: 2 } };
+    set(test, 'foo.bar', 4);
+    expect(test.foo.bar).toBe(4);
+  });
+
+  it('should set value by non-existent path', () => {
+    const test = { foo: {} };
+    set(test, 'foo.bar.baz', 4);
+    // @ts-expect-error
+    expect(test.foo.bar.baz).toBe(4);
+  });
+
+  it('should set value by non-existent path within the array', () => {
+    const test = { foo: {} };
+    set(test, 'foo.bar.0.baz', 4);
+    // @ts-expect-error
+    expect(test.foo.bar[0].baz).toBe(4);
   });
 });
