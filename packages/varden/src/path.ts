@@ -17,23 +17,33 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
     ? T[P]
     : never;
 
-export function get(target: any, path: string, defaultValue: unknown = undefined): any {
-  const parts = path.split('.');
+type CompiledPath = Array<string | number>;
 
-  let object = target;
-  for (let i = 0; i < parts.length - 1; i += 1) {
-    if (typeof object === 'object' && object !== null && parts[i]! in object) {
-      object = object[parts[i]!];
-    } else {
-      return object[parts[i]!] ?? defaultValue;
+export function toCompiledPath(path: string): CompiledPath {
+  const parts: CompiledPath = path.split('.')
+  for (let i = 0; i < parts.length; i += 1) {
+    if (isArrayIndex(parts[i] as string)) {
+      parts[i] = Number.parseInt(parts[i] as string, 10);
     }
   }
 
-  return object[parts[parts.length - 1]!];
+  return parts;
+}
+
+export function get(target: any, path: CompiledPath, defaultValue: unknown = undefined): any {
+  let object = target;
+  for (let i = 0; i < path.length - 1; i += 1) {
+    if (typeof object === 'object' && object !== null && path[i]! in object) {
+      object = object[path[i]!];
+    } else {
+      return object[path[i]!] ?? defaultValue;
+    }
+  }
+
+  return object[path[path.length - 1]!];
 }
 
 export function isArrayIndex(path: string) {
-  // proper implementation
   for (let index = 0; index < path.length; index += 1) {
     const code = path.charCodeAt(index);
     if (code < 48 || code > 57) {
@@ -42,40 +52,33 @@ export function isArrayIndex(path: string) {
   }
 
   return true;
-
-  // lite implementation
-  // charCodeAt(0) > 47 && charCodeAt(0) < 58
 }
 
-export function set(target: any, path: string, value: any) {
-  const parts = path.split('.');
-
+export function set(target: any, path: CompiledPath, value: any) {
   let object = target;
-  for (let i = 0; i < parts.length - 1; i += 1) {
-    if (object[parts[i]!] == null) {
-      if (isArrayIndex(parts[i + 1]!)) {
-        object[parts[i]!] = [];
+  for (let i = 0; i < path.length - 1; i += 1) {
+    if (object[path[i]!] == null) {
+      if (typeof path[i + 1] === 'number') {
+        object[path[i]!] = [];
       } else {
-        object[parts[i]!] = {};
+        object[path[i]!] = {};
       }
     }
-    object = object[parts[i]!];
+    object = object[path[i]!];
   }
 
-  object[parts[parts.length - 1]!] = value;
+  object[path[path.length - 1]!] = value;
 }
 
-export function del(target: any, path: string) {
-  const parts = path.split('.');
-
+export function del(target: any, path: CompiledPath) {
   let object = target;
-  for (let i = 0; i < parts.length - 1; i += 1) {
-    if (typeof object === 'object' && object !== null && parts[i]! in object) {
-      object = object[parts[i]!];
+  for (let i = 0; i < path.length - 1; i += 1) {
+    if (typeof object === 'object' && object !== null && path[i]! in object) {
+      object = object[path[i]!];
     } else {
       return;
     }
   }
 
-  delete object[parts[parts.length - 1]!];
+  delete object[path[path.length - 1]!];
 }

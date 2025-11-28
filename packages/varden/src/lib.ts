@@ -13,7 +13,7 @@ import {
 } from 'vue';
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
 
-import { type Paths, type Get as Get, get, set, del } from './path';
+import { type Paths, type Get as Get, get, set, del, toCompiledPath } from './path';
 
 type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } : Partial<T>;
 
@@ -80,7 +80,7 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
   };
 
   const resetField: FormContext<T>['resetField'] = (path) => {
-    del(currentValues.value, path);
+    del(currentValues.value, toCompiledPath(path));
   };
 
   async function applyValidation() {
@@ -118,6 +118,7 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
   }
 
   const useFieldValue: FormContext<T>['useFieldValue'] = (path) => {
+    const compiledPath = toCompiledPath(path);
     let meta = fields[path];
     if (!meta) {
       meta = { touched: false, dirty: false, error: '' };
@@ -127,11 +128,11 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
     onUnmounted(() => resetField(path));
 
     return computed({
-      get: () => get(currentValues.value, path),
+      get: () => get(currentValues.value, compiledPath),
       set(value) {
-        set(currentValues.value, path, value);
+        set(currentValues.value, compiledPath, value);
 
-        meta.dirty = get(initialValues, path) !== value;
+        meta.dirty = get(initialValues, compiledPath) !== value;
         applyValidation();
       },
     });
@@ -159,6 +160,7 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
   ];
 
   const useArrayFieldValue: FormContext<T>['useArrayFieldValue'] = (path) => {
+    const compiledPath = toCompiledPath(path);
     let meta = fields[path];
     if (!meta) {
       meta = { touched: false, dirty: false, error: '' };
@@ -166,14 +168,14 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
     }
 
     return computed({
-      get: () => get(currentValues.value, path) ?? [],
+      get: () => get(currentValues.value, compiledPath) ?? [],
       set(value) {
         if (!Array.isArray(value)) {
           throw new Error(`Array expected, got ${typeof value}`);
         }
-        set(currentValues.value, path, value);
+        set(currentValues.value, compiledPath, value);
 
-        meta.dirty = get(initialValues, path) !== value;
+        meta.dirty = get(initialValues, compiledPath) !== value;
         applyValidation();
       },
     });
@@ -197,17 +199,17 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
     reset,
     resetField,
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value) {
-      set(currentValues.value, path, value);
+      set(currentValues.value, toCompiledPath(path), value);
 
       if (fields[path]) {
-        fields[path].dirty = get(initialValues, path) !== value;
+        fields[path].dirty = get(initialValues, toCompiledPath(path)) !== value;
       } else {
         fields[path] = { dirty: true, touched: false, error: '' };
       }
       applyValidation();
     },
     getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value {
-      return get(currentValues.value, path);
+      return get(currentValues.value, toCompiledPath(path));
     },
     setTouched<Path extends Paths<T>>(path: Path, flag = true) {
       fields[path]!.touched = flag;
