@@ -55,12 +55,15 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
   const { initial, schema, onSubmit, cloner = structuredClone } = props;
 
   let initialValuesFactory: () => PartialDeep<T>;
-  if (initial === undefined) {
+  if (initial == null) {
     initialValuesFactory = () => ({}) as PartialDeep<T>;
   } else if (typeof initial === 'object') {
-    initialValuesFactory = () => cloner(initial) as PartialDeep<T>;
-  } else {
+    const snapshot = cloner(initial);
+    initialValuesFactory = () => cloner(snapshot) as PartialDeep<T>;
+  } else if (typeof initial === 'function') {
     initialValuesFactory = initial as () => PartialDeep<T>;
+  } else {
+    throw new TypeError('Unsupported initial value type');
   }
   let initialValues: PartialDeep<T> = initialValuesFactory();
 
