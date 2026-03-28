@@ -1,6 +1,5 @@
 import { defineConfig } from 'tsdown';
 import Vue from 'unplugin-vue/rolldown';
-
 import { statsPlugin } from 'vite-bundle-explorer/plugin';
 
 export default defineConfig({
