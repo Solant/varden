@@ -18,8 +18,8 @@ importers:
         specifier: ^10.0.0
         version: 10.8.0(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1))(vue-eslint-parser@10.4.0(eslint@9.39.4(jiti@2.5.1)))
       eslint-stylistic-airbnb:
-        specifier: ^3.0.0
-        version: 3.0.0(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-react@7.37.5(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-vue@10.8.0(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1))(vue-eslint-parser@10.4.0(eslint@9.39.4(jiti@2.5.1))))(eslint@9.39.4(jiti@2.5.1))
+        specifier: ^3.0.2
+        version: 3.0.2(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-react@7.37.5(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-vue@10.8.0(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1))(vue-eslint-parser@10.4.0(eslint@9.39.4(jiti@2.5.1))))(eslint@9.39.4(jiti@2.5.1))
       globals:
         specifier: ^16.0.0
         version: 16.5.0
@@ -1711,8 +1711,8 @@ packages:
     resolution: {integrity: sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  eslint-stylistic-airbnb@3.0.0:
-    resolution: {integrity: sha512-Ns99Sinm0ypIQRKFi9cqmVkf2kSk58vG1DAAA2kPgsyRrbAaXm8Em1wb1flp+KevDBqhWsqYPqCc+1fTIVWsRA==}
+  eslint-stylistic-airbnb@3.0.2:
+    resolution: {integrity: sha512-Iowc+vccT8NQSoi/Q5gZB8jkr88neOjSyfeR/B+v3VmX5xrYKQWJwCXBqgGPoRmX4rZtWC8+acGST5ulXhk6UQ==}
     peerDependencies:
       '@stylistic/eslint-plugin': '>=2.0.0'
       eslint: '>=8.57.0'
@@ -4609,7 +4609,7 @@ snapshots:
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
-  eslint-stylistic-airbnb@3.0.0(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-react@7.37.5(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-vue@10.8.0(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1))(vue-eslint-parser@10.4.0(eslint@9.39.4(jiti@2.5.1))))(eslint@9.39.4(jiti@2.5.1)):
+  eslint-stylistic-airbnb@3.0.2(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-react@7.37.5(eslint@9.39.4(jiti@2.5.1)))(eslint-plugin-vue@10.8.0(@stylistic/eslint-plugin@4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2))(eslint@9.39.4(jiti@2.5.1))(vue-eslint-parser@10.4.0(eslint@9.39.4(jiti@2.5.1))))(eslint@9.39.4(jiti@2.5.1)):
     dependencies:
       '@stylistic/eslint-plugin': 4.4.1(eslint@9.39.4(jiti@2.5.1))(typescript@5.9.2)
       confusing-browser-globals: 1.0.11

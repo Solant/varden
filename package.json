@@ -11,7 +11,7 @@
     "@stylistic/eslint-plugin": "^4.0.0",
     "eslint": "^9.18.0",
     "eslint-plugin-vue": "^10.0.0",
-    "eslint-stylistic-airbnb": "^3.0.0",
+    "eslint-stylistic-airbnb": "^3.0.2",
     "globals": "^16.0.0",
     "typescript-eslint": "^8.20.0"
   }
