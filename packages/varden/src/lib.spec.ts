@@ -8,9 +8,7 @@ describe('form reset', () => {
     const form = useForm({
       initial: { name: 'John' },
       schema: v.object({ name: v.string() }),
-      onSubmit(values) {
-        console.log(values);
-      },
+      onSubmit: () => { },
     });
 
     expect(form.values.value.name).toBe('John');
@@ -26,9 +24,7 @@ describe('form reset', () => {
     const form = useForm({
       initial: { name: 'John' },
       schema: v.object({ name: v.string() }),
-      onSubmit(values) {
-        console.log(values);
-      },
+      onSubmit: () => { },
     });
     expect(form.dirty.value).toBe(false);
 
@@ -53,7 +49,7 @@ describe('form reset', () => {
   it('should validate initial value type', () => {
     expect(() => {
       useForm({
-        // @ts-expect-error
+        // @ts-expect-error test case
         initial: 'not-an-object',
         schema: v.object({ name: v.string() }),
         onSubmit: () => { },

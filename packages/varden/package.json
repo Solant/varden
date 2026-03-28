@@ -42,6 +42,7 @@
   "jsdelivr": "./dist/index.js",
   "scripts": {
     "build": "tsdown",
+    "lint": "eslint .",
     "test": "vitest --coverage",
     "release": "pnpm test && pnpm build && pnpm changelogen --release --push && pnpm publish"
   },
@@ -50,14 +51,12 @@
     "@vitest/coverage-v8": "^3.2.4",
     "@vue/tsconfig": "^0.8.1",
     "changelogen": "^0.6.2",
-    "prettier": "^3.6.2",
     "tsdown": "^0.15.1",
     "typescript": "~5.9.2",
     "unplugin-vue": "^7.0.1",
     "valibot": "^1.1.0",
     "vite-bundle-explorer": "^0.3.1",
-    "vitest": "^3.2.4",
-    "vue-tsc": "^3.0.7"
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "vue": "^3.5.13"

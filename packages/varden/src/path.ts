@@ -3,8 +3,8 @@ export type Paths<T> =
     ? `${Paths<U>}`
     : T extends object
       ? {
-          [K in keyof T & (string | number)]: K extends string ? `${K}` | `${K}.${Paths<T[K]>}` : never;
-        }[keyof T & (string | number)]
+        [K in keyof T & (string | number)]: K extends string ? `${K}` | `${K}.${Paths<T[K]>}` : never;
+      }[keyof T & (string | number)]
       : never;
 
 export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
@@ -20,7 +20,7 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
 type CompiledPath = Array<string | number>;
 
 export function toCompiledPath(path: string): CompiledPath {
-  const parts: CompiledPath = path.split('.')
+  const parts: CompiledPath = path.split('.');
   for (let i = 0; i < parts.length; i += 1) {
     if (isArrayIndex(parts[i] as string)) {
       parts[i] = Number.parseInt(parts[i] as string, 10);
@@ -30,6 +30,7 @@ export function toCompiledPath(path: string): CompiledPath {
   return parts;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function get(target: any, path: CompiledPath, defaultValue: unknown = undefined): any {
   let object = target;
   for (let i = 0; i < path.length - 1; i += 1) {
@@ -54,6 +55,7 @@ export function isArrayIndex(path: string) {
   return true;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function set(target: any, path: CompiledPath, value: any) {
   let object = target;
   for (let i = 0; i < path.length - 1; i += 1) {
@@ -70,6 +72,7 @@ export function set(target: any, path: CompiledPath, value: any) {
   object[path[path.length - 1]!] = value;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function del(target: any, path: CompiledPath) {
   let object = target;
   for (let i = 0; i < path.length - 1; i += 1) {

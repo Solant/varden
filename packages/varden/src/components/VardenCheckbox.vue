@@ -8,12 +8,16 @@ const props = defineProps<{
   path: Path;
 }>();
 
-const [model, onBlur, error] = props.form.useField(props.path);
+const [
+  model,
+  onBlur,
+  error,
+] = props.form.useField(props.path);
 
 function update(event: Event) {
   const target = event.target as HTMLInputElement | null;
   if (target) {
-    // @ts-expect-error
+    // @ts-expect-error html input value type is unknown
     model.value = !model.value;
     onBlur();
   }
@@ -21,5 +25,8 @@ function update(event: Event) {
 </script>
 
 <template>
-  <slot :field="{ checked: Boolean(model), onChange: update, onBlur, type: 'checkbox' }" :error />
+  <slot
+    :field="{ checked: Boolean(model), onChange: update, onBlur, type: 'checkbox' }"
+    :error
+  />
 </template>

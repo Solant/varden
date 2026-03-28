@@ -10,7 +10,11 @@ const props = defineProps<{
   value: Get<T, Path>;
 }>();
 
-const [model, onBlur, error] = props.form.useField(props.path);
+const [
+  model,
+  onBlur,
+  error,
+] = props.form.useField(props.path);
 
 function update(event: Event) {
   const target = event.target as HTMLInputElement | null;
@@ -24,5 +28,8 @@ const checked = computed(() => toRaw(model.value) === props.value);
 </script>
 
 <template>
-  <slot :field="{ checked, value, onChange: update, onBlur, type: 'radio' }" :error />
+  <slot
+    :field="{ checked, value, onChange: update, onBlur, type: 'radio' }"
+    :error
+  />
 </template>

@@ -5,7 +5,10 @@ defineProps<{ form: FormContext<unknown> }>();
 </script>
 
 <template>
-  <form @submit.prevent="form.submit" @reset.prevent="form.reset">
+  <form
+    @submit.prevent="form.submit"
+    @reset.prevent="form.reset"
+  >
     <slot />
   </form>
 </template>
