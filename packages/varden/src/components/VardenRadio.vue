@@ -1,7 +1,7 @@
 <script lang="ts" setup generic="T, Path extends Paths<T>">
-import type { Paths, Get } from '../path';
 import { computed, toRaw } from 'vue';
 
+import type { Paths, Get } from '../path';
 import type { FormContext } from '../lib';
 
 const props = defineProps<{

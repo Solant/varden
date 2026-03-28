@@ -11,8 +11,8 @@ import {
   type WritableComputedRef,
   onUnmounted,
 } from 'vue';
-import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
 
+import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
 import {
   type Paths, type Get, get, set, del, toCompiledPath,
 } from './path';
