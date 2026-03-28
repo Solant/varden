@@ -1,6 +1,8 @@
 import { expect, it, describe } from 'vitest';
 
-import { del, get, isArrayIndex, set, toCompiledPath } from './path';
+import {
+  del, get, isArrayIndex, set, toCompiledPath,
+} from './path';
 
 describe('path utilities', () => {
   it('should detect array index', () => {
@@ -57,14 +59,14 @@ describe('path utilities', () => {
   it('should set value by non-existent path', () => {
     const test = { foo: {} };
     set(test, toCompiledPath('foo.bar.baz'), 4);
-    // @ts-expect-error
+    // @ts-expect-error test case
     expect(test.foo.bar.baz).toBe(4);
   });
 
   it('should set value by non-existent path within the array', () => {
     const test = { foo: {} };
     set(test, toCompiledPath('foo.bar.0.baz'), 4);
-    // @ts-expect-error
+    // @ts-expect-error test case
     expect(test.foo.bar[0].baz).toBe(4);
   });
 });

@@ -7,17 +7,24 @@ const props = defineProps<{
   path: Path;
 }>();
 
-const [model, onBlur, error] = props.form.useField(props.path);
+const [
+  model,
+  onBlur,
+  error,
+] = props.form.useField(props.path);
 
 function onInput(event: Event) {
   const target = event.target as HTMLInputElement | null;
   if (target) {
-    // @ts-expect-error
+    // @ts-expect-error html input value type is unknown
     model.value = target.value;
   }
 }
 </script>
 
 <template>
-  <slot :field="{ value: model, onInput, onBlur }" :error />
+  <slot
+    :field="{ value: model, onInput, onBlur }"
+    :error
+  />
 </template>

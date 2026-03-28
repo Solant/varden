@@ -8,7 +8,11 @@ const props = defineProps<{
   path: Path;
 }>();
 
-const [modelValue, onBlur, error] = props.form.useField(props.path);
+const [
+  modelValue,
+  onBlur,
+  error,
+] = props.form.useField(props.path);
 
 function update(value: Get<T, Path>) {
   modelValue.value = value;
@@ -16,5 +20,8 @@ function update(value: Get<T, Path>) {
 </script>
 
 <template>
-  <slot :field="{ modelValue, 'onUpdate:modelValue': update, onBlur }" :error />
+  <slot
+    :field="{ modelValue, 'onUpdate:modelValue': update, onBlur }"
+    :error
+  />
 </template>

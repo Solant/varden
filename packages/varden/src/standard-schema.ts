@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-namespace, no-redeclare,
+@typescript-eslint/no-use-before-define */
+
 // https://standardschema.dev/
 
 /** The Standard Schema interface. */

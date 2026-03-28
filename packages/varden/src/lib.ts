@@ -13,7 +13,9 @@ import {
 } from 'vue';
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
 
-import { type Paths, type Get as Get, get, set, del, toCompiledPath } from './path';
+import {
+  type Paths, type Get, get, set, del, toCompiledPath,
+} from './path';
 
 type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } : Partial<T>;
 
@@ -21,7 +23,7 @@ interface FormProps<T> {
   schema: StandardSchemaV1<T>;
   initial?: (() => PartialDeep<T>) | PartialDeep<T>;
   onSubmit: (value: T) => Promise<void> | void;
-  cloner?: <A = any>(arg: A) => A;
+  cloner?: <A>(arg: A) => A;
 }
 
 interface FieldMeta {
@@ -51,8 +53,10 @@ export interface FormContext<T> {
   useArrayField<P extends Paths<T>, V extends Get<T, P>>(path: P): [WritableComputedRef<V>];
 }
 
-export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
-  const { initial, schema, onSubmit, cloner = structuredClone } = props;
+export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
+  const {
+    initial, schema, onSubmit, cloner = structuredClone,
+  } = props;
 
   let initialValuesFactory: () => PartialDeep<T>;
   if (initial == null) {
@@ -65,7 +69,7 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
   } else {
     throw new TypeError('Unsupported initial value type');
   }
-  let initialValues: PartialDeep<T> = initialValuesFactory();
+  const initialValues: PartialDeep<T> = initialValuesFactory();
 
   const currentValues = ref<PartialDeep<T>>(initialValuesFactory());
   const fields = reactive<{ [key: string]: FieldMeta }>({});
@@ -77,6 +81,7 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
     currentValues.value = initialValuesFactory();
     applyValidation();
 
+    // eslint-disable-next-line no-restricted-syntax, guard-for-in
     for (const field in fields) {
       fields[field]!.touched = false;
     }
@@ -89,15 +94,17 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
   async function applyValidation() {
     const result = await schema['~standard'].validate(currentValues.value);
 
-    let issues = [...(result.issues ?? [])];
-    let paths = issues.map(getIssuePath);
+    const issues = [...(result.issues ?? [])];
+    const paths = issues.map(getIssuePath);
 
     valid.value = issues.length === 0;
 
+    // eslint-disable-next-line no-restricted-syntax, guard-for-in
     for (const field in fields) {
       const index = paths.indexOf(field);
       if (index === -1) {
         fields[field]!.error = '';
+        // eslint-disable-next-line no-continue
         continue;
       }
 
@@ -141,20 +148,16 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
     });
   };
 
-  const useFieldTouch: FormContext<T>['useFieldTouch'] = (path) => {
-    return (flag?: boolean | FocusEvent) => {
-      fields[path]!.touched = flag instanceof FocusEvent ? true : (flag ?? true);
-    };
+  const useFieldTouch: FormContext<T>['useFieldTouch'] = (path) => (flag?: boolean | FocusEvent) => {
+    fields[path]!.touched = flag instanceof FocusEvent ? true : (flag ?? true);
   };
 
-  const useFieldError: FormContext<T>['useFieldError'] = (path) => {
-    return computed<string>(() => {
-      if (fields[path]!.touched) {
-        return fields[path]!.error;
-      }
-      return '';
-    });
-  };
+  const useFieldError: FormContext<T>['useFieldError'] = (path) => computed<string>(() => {
+    if (fields[path]!.touched) {
+      return fields[path]!.error;
+    }
+    return '';
+  });
 
   const useField: FormContext<T>['useField'] = (path) => [
     useFieldValue(path),
@@ -187,6 +190,7 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
   const useArrayField: FormContext<T>['useArrayField'] = (path) => [useArrayFieldValue(path)];
 
   const dirty: FormContext<T>['dirty'] = computed<boolean>(() => {
+    // eslint-disable-next-line
     for (const field in fields) {
       if (fields[field]?.dirty === true) {
         return true;
@@ -220,6 +224,7 @@ export function useForm<T = {}>(props: FormProps<T>): FormContext<T> {
     valid,
     submit() {
       if (!valid.value) {
+        // eslint-disable-next-line no-restricted-syntax, guard-for-in
         for (const field in fields) {
           fields[field]!.touched = true;
         }
