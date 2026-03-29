@@ -9,7 +9,7 @@ import {
   type Ref,
   type DeepReadonly,
   type WritableComputedRef,
-  onUnmounted,
+  onScopeDispose,
 } from 'vue';
 
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
@@ -30,6 +30,8 @@ interface FieldMeta {
   touched: boolean;
   dirty: boolean;
   error: string;
+  refCount: number;
+  manual?: true;
 }
 
 export interface FormContext<T> {
@@ -122,7 +124,12 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       const path = paths[index]!;
       const error = issues[index]!.message;
 
-      const meta = { touched: false, dirty: false, error };
+      const meta = {
+        touched: false,
+        dirty: false,
+        error,
+        refCount: 0,
+      };
       fields[path] = meta;
     }
   }
@@ -130,12 +137,24 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const useFieldValue: FormContext<T>['useFieldValue'] = (path) => {
     const compiledPath = toCompiledPath(path);
     let meta = fields[path];
-    if (!meta) {
-      meta = { touched: false, dirty: false, error: '' };
+    if (meta === undefined) {
+      meta = {
+        touched: false,
+        dirty: false,
+        error: '',
+        refCount: 1,
+      };
       fields[path] = meta;
+    } else {
+      meta.refCount += 1;
     }
 
-    onUnmounted(() => resetField(path));
+    onScopeDispose(() => {
+      meta.refCount -= 1;
+      if (meta.refCount === 0) {
+        resetField(path);
+      }
+    }, true);
 
     return computed({
       get: () => get(currentValues.value, compiledPath),
@@ -168,9 +187,13 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const useArrayFieldValue: FormContext<T>['useArrayFieldValue'] = (path) => {
     const compiledPath = toCompiledPath(path);
     let meta = fields[path];
-    if (!meta) {
-      meta = { touched: false, dirty: false, error: '' };
+    if (meta === undefined) {
+      meta = {
+        touched: false, dirty: false, error: '', refCount: 1,
+      };
       fields[path] = meta;
+    } else {
+      meta.refCount += 1;
     }
 
     return computed({
@@ -211,7 +234,9 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       if (fields[path]) {
         fields[path].dirty = get(initialValues, toCompiledPath(path)) !== value;
       } else {
-        fields[path] = { dirty: true, touched: false, error: '' };
+        fields[path] = {
+          dirty: true, touched: false, error: '', refCount: 0, manual: true,
+        };
       }
       applyValidation();
     },
