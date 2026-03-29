@@ -10,6 +10,9 @@ import {
   type DeepReadonly,
   type WritableComputedRef,
   onScopeDispose,
+  type MaybeRefOrGetter,
+  watch,
+  toValue,
 } from 'vue';
 
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
@@ -45,7 +48,7 @@ export interface FormContext<T> {
   valid: Ref<boolean>;
   meta: Reactive<Record<string, FieldMeta>>;
   submit(): void;
-  useFieldValue<P extends Paths<T>, V extends Get<T, P>>(path: P): WritableComputedRef<V>;
+  useFieldValue<P extends Paths<T>, V extends Get<T, P>>(path: MaybeRefOrGetter<P>): WritableComputedRef<V>;
   useFieldTouch<P extends Paths<T>>(path: P): (flag?: boolean | FocusEvent) => void;
   useFieldError<P extends Paths<T>>(path: P): ComputedRef<string>;
   useField<P extends Paths<T>, V extends Get<T, P>>(
@@ -134,34 +137,57 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     }
   }
 
-  const useFieldValue: FormContext<T>['useFieldValue'] = (path) => {
-    const compiledPath = toCompiledPath(path);
-    let meta = fields[path];
-    if (meta === undefined) {
-      meta = {
-        touched: false,
-        dirty: false,
-        error: '',
-        refCount: 1,
-      };
-      fields[path] = meta;
-    } else {
-      meta.refCount += 1;
-    }
-
-    onScopeDispose(() => {
+  function releaseField(path: string) {
+    const meta = fields[path];
+    if (meta !== undefined) {
       meta.refCount -= 1;
       if (meta.refCount === 0) {
-        resetField(path);
+        delete fields[path];
+        resetField(path as Paths<T>);
       }
+    }
+  }
+
+  function accquireField(path: string) {
+    const meta = fields[path];
+    if (meta !== undefined) {
+      meta.refCount += 1;
+      return;
+    }
+
+    fields[path] = {
+      touched: false,
+      dirty: false,
+      error: '',
+      refCount: 1,
+    };
+  }
+
+  const useFieldValue: FormContext<T>['useFieldValue'] = (fieldPath) => {
+    const compiledPath = computed(() => toCompiledPath(toValue(fieldPath)));
+
+    let path: typeof fieldPath;
+    let meta: FieldMeta;
+
+    watch(() => toValue(fieldPath), (currentPath, previousPath) => {
+      if (previousPath) releaseField(previousPath);
+      accquireField(currentPath);
+
+      meta = fields[currentPath]!;
+      path = currentPath;
+    }, { immediate: true });
+
+    onScopeDispose(() => {
+      if (!path) return;
+      releaseField(toValue(path));
     }, true);
 
     return computed({
-      get: () => get(currentValues.value, compiledPath),
+      get: () => get(currentValues.value, compiledPath.value),
       set(value) {
-        set(currentValues.value, compiledPath, value);
+        set(currentValues.value, compiledPath.value, value);
 
-        meta.dirty = get(initialValues, compiledPath) !== value;
+        meta.dirty = get(initialValues, compiledPath.value) !== value;
         applyValidation();
       },
     });

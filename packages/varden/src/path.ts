@@ -17,7 +17,7 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
     ? T[P]
     : never;
 
-type CompiledPath = Array<string | number>;
+export type CompiledPath = Array<string | number>;
 
 export function toCompiledPath(path: string): CompiledPath {
   const parts: CompiledPath = path.split('.');
