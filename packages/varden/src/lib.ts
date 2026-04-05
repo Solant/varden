@@ -48,7 +48,9 @@ export interface FormContext<T> {
   valid: Ref<boolean>;
   meta: Reactive<Record<string, FieldMeta>>;
   submit(): void;
-  useFieldValue<P extends Paths<T>, V extends Get<T, P>>(path: MaybeRefOrGetter<P>): WritableComputedRef<V>;
+  useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
+    path: MaybeRefOrGetter<P>,
+  ): WritableComputedRef<V>;
   useFieldTouch<P extends Paths<T>>(path: P): (flag?: boolean | FocusEvent) => void;
   useFieldError<P extends Paths<T>>(path: P): ComputedRef<string>;
   useField<P extends Paths<T>, V extends Get<T, P>>(
