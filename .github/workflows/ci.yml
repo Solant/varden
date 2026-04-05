@@ -31,7 +31,8 @@ jobs:
         run: pnpm lint
 
       - name: Install browsers
-        run: pnpm -C packages/varden playwright install chromium
+        working-directory: packages/varden
+        run: pnpm playwright install chromium
 
       - name: Test
         run: pnpm test
