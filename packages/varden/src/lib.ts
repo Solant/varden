@@ -9,7 +9,10 @@ import {
   type Ref,
   type DeepReadonly,
   type WritableComputedRef,
-  onUnmounted,
+  onScopeDispose,
+  type MaybeRefOrGetter,
+  watch,
+  toValue,
 } from 'vue';
 
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
@@ -30,6 +33,8 @@ interface FieldMeta {
   touched: boolean;
   dirty: boolean;
   error: string;
+  refCount: number;
+  manual?: true;
 }
 
 export interface FormContext<T> {
@@ -43,7 +48,9 @@ export interface FormContext<T> {
   valid: Ref<boolean>;
   meta: Reactive<Record<string, FieldMeta>>;
   submit(): void;
-  useFieldValue<P extends Paths<T>, V extends Get<T, P>>(path: P): WritableComputedRef<V>;
+  useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
+    path: MaybeRefOrGetter<P>,
+  ): WritableComputedRef<V>;
   useFieldTouch<P extends Paths<T>>(path: P): (flag?: boolean | FocusEvent) => void;
   useFieldError<P extends Paths<T>>(path: P): ComputedRef<string>;
   useField<P extends Paths<T>, V extends Get<T, P>>(
@@ -122,27 +129,67 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       const path = paths[index]!;
       const error = issues[index]!.message;
 
-      const meta = { touched: false, dirty: false, error };
+      const meta = {
+        touched: false,
+        dirty: false,
+        error,
+        refCount: 0,
+      };
       fields[path] = meta;
     }
   }
 
-  const useFieldValue: FormContext<T>['useFieldValue'] = (path) => {
-    const compiledPath = toCompiledPath(path);
-    let meta = fields[path];
-    if (!meta) {
-      meta = { touched: false, dirty: false, error: '' };
-      fields[path] = meta;
+  function releaseField(path: string) {
+    const meta = fields[path];
+    if (meta !== undefined) {
+      meta.refCount -= 1;
+      if (meta.refCount === 0) {
+        delete fields[path];
+        resetField(path as Paths<T>);
+      }
+    }
+  }
+
+  function accquireField(path: string) {
+    const meta = fields[path];
+    if (meta !== undefined) {
+      meta.refCount += 1;
+      return;
     }
 
-    onUnmounted(() => resetField(path));
+    fields[path] = {
+      touched: false,
+      dirty: false,
+      error: '',
+      refCount: 1,
+    };
+  }
+
+  const useFieldValue: FormContext<T>['useFieldValue'] = (fieldPath) => {
+    const compiledPath = computed(() => toCompiledPath(toValue(fieldPath)));
+
+    let path: typeof fieldPath;
+    let meta: FieldMeta;
+
+    watch(() => toValue(fieldPath), (currentPath, previousPath) => {
+      if (previousPath) releaseField(previousPath);
+      accquireField(currentPath);
+
+      meta = fields[currentPath]!;
+      path = currentPath;
+    }, { immediate: true });
+
+    onScopeDispose(() => {
+      if (!path) return;
+      releaseField(toValue(path));
+    }, true);
 
     return computed({
-      get: () => get(currentValues.value, compiledPath),
+      get: () => get(currentValues.value, compiledPath.value),
       set(value) {
-        set(currentValues.value, compiledPath, value);
+        set(currentValues.value, compiledPath.value, value);
 
-        meta.dirty = get(initialValues, compiledPath) !== value;
+        meta.dirty = get(initialValues, compiledPath.value) !== value;
         applyValidation();
       },
     });
@@ -168,9 +215,13 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const useArrayFieldValue: FormContext<T>['useArrayFieldValue'] = (path) => {
     const compiledPath = toCompiledPath(path);
     let meta = fields[path];
-    if (!meta) {
-      meta = { touched: false, dirty: false, error: '' };
+    if (meta === undefined) {
+      meta = {
+        touched: false, dirty: false, error: '', refCount: 1,
+      };
       fields[path] = meta;
+    } else {
+      meta.refCount += 1;
     }
 
     return computed({
@@ -211,7 +262,9 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       if (fields[path]) {
         fields[path].dirty = get(initialValues, toCompiledPath(path)) !== value;
       } else {
-        fields[path] = { dirty: true, touched: false, error: '' };
+        fields[path] = {
+          dirty: true, touched: false, error: '', refCount: 0, manual: true,
+        };
       }
       applyValidation();
     },

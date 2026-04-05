@@ -30,6 +30,10 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Install browsers
+        working-directory: packages/varden
+        run: pnpm playwright install chromium
+
       - name: Test
         run: pnpm test
 
