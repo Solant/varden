@@ -24,7 +24,7 @@ type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } 
 
 interface FormProps<T> {
   schema: StandardSchemaV1<T>;
-  initial?: (() => PartialDeep<T>) | PartialDeep<T>;
+  initial?: PartialDeep<T>;
   onSubmit: (value: T) => Promise<void> | void;
   cloner?: <A>(arg: A) => A;
 }
@@ -71,8 +71,6 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   } else if (typeof initial === 'object') {
     const snapshot = cloner(initial);
     initialValuesFactory = () => cloner(snapshot) as PartialDeep<T>;
-  } else if (typeof initial === 'function') {
-    initialValuesFactory = initial as () => PartialDeep<T>;
   } else {
     throw new TypeError('Unsupported initial value type');
   }
