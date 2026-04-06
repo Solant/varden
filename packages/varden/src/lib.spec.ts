@@ -119,4 +119,20 @@ describe('resetField', () => {
     expect(form.meta.name?.dirty).toBe(false);
     expect(form.meta.name?.touched).toBe(false);
   });
+
+  it('should reset nested fields', () => {
+    const form = useForm({
+      initial: { name: { first: 'John', last: 'Doe' } },
+      schema: v.object({ name: v.object({ first: v.string(), last: v.string() }) }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('name.first', 'Jack');
+    expect(form.meta['name.first']?.dirty).toBe(true);
+
+    form.resetField('name');
+
+    expect(form.values.value.name?.first).toBe('John');
+    expect(form.meta['name.first']?.dirty).toBe(false);
+  });
 });

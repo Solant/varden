@@ -94,9 +94,26 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
         meta.dirty = false;
         meta.touched = false;
       }
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const nestedPath in fields) {
+        if (nestedPath.startsWith(`${path}.`)) {
+          const meta2 = fields[nestedPath];
+          if (meta2 !== undefined) {
+            meta2.dirty = false;
+            meta2.touched = false;
+          }
+        }
+      }
     } else {
       del(currentValues.value, cPath);
       delete fields[path];
+      // eslint-disable-next-line no-restricted-syntax
+      for (const field in fields) {
+        if (field.startsWith(`${path}.`)) {
+          delete fields[field];
+        }
+      }
     }
   };
 
