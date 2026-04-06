@@ -88,3 +88,35 @@ describe('meta management', () => {
     expect(form.values.value.name).toBe(undefined);
   });
 });
+
+describe('resetField', () => {
+  it('should reset field to initial value', () => {
+    const form = useForm({
+      initial: { name: 'John' },
+      schema: v.object({ name: v.string() }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('name', 'Jack');
+    form.resetField('name');
+
+    expect(form.values.value.name).toBe('John');
+  });
+
+  it('should reset field metadata', () => {
+    const form = useForm({
+      initial: { name: 'John' },
+      schema: v.object({ name: v.string() }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('name', 'Jack');
+    form.setTouched('name', true);
+    expect(form.meta.name?.dirty).toBe(true);
+    expect(form.meta.name?.touched).toBe(true);
+
+    form.resetField('name');
+    expect(form.meta.name?.dirty).toBe(false);
+    expect(form.meta.name?.touched).toBe(false);
+  });
+});

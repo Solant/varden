@@ -83,7 +83,21 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   };
 
   const resetField: FormContext<T>['resetField'] = (path) => {
-    del(currentValues.value, toCompiledPath(path));
+    const cPath = toCompiledPath(path);
+
+    const value = get(initialValues, cPath);
+    if (value !== undefined) {
+      set(currentValues.value, cPath, value);
+
+      const meta = fields[path];
+      if (meta !== undefined) {
+        meta.dirty = false;
+        meta.touched = false;
+      }
+    } else {
+      del(currentValues.value, cPath);
+      delete fields[path];
+    }
   };
 
   async function applyValidation() {
