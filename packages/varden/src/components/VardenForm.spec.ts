@@ -23,6 +23,7 @@ describe('meta management', () => {
     const wrapper = mount(VardenForm, {
       props: { form },
       slots: {
+        // @ts-expect-error typed vue component
         default: () => h('div', [h(VardenField, { form, path: 'name' }), h(VardenField, { form, path: 'email' })]),
       },
     });
@@ -53,6 +54,7 @@ describe('meta management', () => {
     const wrapper = mount(VardenForm, {
       props: { form },
       slots: {
+        // @ts-expect-error typed vue component
         default: () => h(VardenField, { form, path: 'name' }),
       },
     });
@@ -80,6 +82,7 @@ describe('meta management', () => {
     const wrapper = mount(VardenForm, {
       props: { form },
       slots: {
+        // @ts-expect-error typed vue component
         default: () => h(VardenField, { form, path: 'name' }),
       },
     });

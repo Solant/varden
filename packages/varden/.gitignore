@@ -1,3 +1,4 @@
 dist
 bundle-report
 coverage
+src/components/__screenshots__

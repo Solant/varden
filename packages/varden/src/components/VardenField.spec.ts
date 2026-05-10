@@ -14,6 +14,7 @@ describe('meta management', () => {
     });
 
     const wrapper = mount(VardenField, {
+      // @ts-expect-error typed vue component
       props: { form, path: 'name' },
       slots: {
         default: ({ field, error }: { field: { modelValue: string }; error: string }) => h('div', [
@@ -45,6 +46,7 @@ describe('meta management', () => {
     });
 
     const wrapper1 = mount(VardenField, {
+      // @ts-expect-error typed vue component
       props: { form, path: 'name' },
       slots: {
         default: ({ field }: { field: { modelValue: string } }) => h('input', {
@@ -59,6 +61,7 @@ describe('meta management', () => {
     });
 
     const wrapper2 = mount(VardenField, {
+      // @ts-expect-error typed vue component
       props: { form, path: 'name' },
       slots: {
         default: ({ field }: { field: { modelValue: string } }) => h('input', {
