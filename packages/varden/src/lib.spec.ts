@@ -135,4 +135,15 @@ describe('resetField', () => {
     expect(form.values.value.name?.first).toBe('John');
     expect(form.meta['name.first']?.dirty).toBe(false);
   });
+
+  it.only('should cleanup nested path for the field', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.object({ bar: v.object({ baz: v.string() }) }) }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('foo.bar.baz', 'Test');
+    form.resetField('foo.bar.baz');
+    expect(form.values.value).toBe(undefined);
+  });
 });
