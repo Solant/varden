@@ -146,4 +146,16 @@ describe('resetField', () => {
     form.resetField('foo.bar.baz');
     expect(form.values.value).toBe(undefined);
   });
+
+  it.only('should not delete nested path if sibling fields exist', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.object({ bar: v.object({ baz: v.string() }), qux: v.string() }) }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('foo.bar.baz', 'Test');
+    form.setValue('foo.qux', 'Test2');
+    form.resetField('foo.bar.baz');
+    expect(form.values.value).toStrictEqual({ foo: { qux: 'Test2' } });
+  });
 });
