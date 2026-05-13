@@ -43,6 +43,7 @@
   "scripts": {
     "build": "tsdown",
     "lint": "eslint .",
+    "typecheck": "vue-tsc -b",
     "test": "vitest --coverage",
     "release": "pnpm test && pnpm build && pnpm changelogen --release --push && pnpm publish"
   },
