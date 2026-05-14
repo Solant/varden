@@ -65,25 +65,16 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     initial, schema, onSubmit, cloner = structuredClone,
   } = props;
 
-  let initialValuesFactory: () => PartialDeep<T>;
-  if (initial == null) {
-    initialValuesFactory = () => ({}) as PartialDeep<T>;
-  } else if (typeof initial === 'object') {
-    const snapshot = cloner(initial);
-    initialValuesFactory = () => cloner(snapshot) as PartialDeep<T>;
-  } else {
-    throw new TypeError('Unsupported initial value type');
-  }
-  const initialValues: PartialDeep<T> = initialValuesFactory();
+  const initialValues: PartialDeep<T> = cloner(initial ?? {} as PartialDeep<T>);
 
-  const currentValues = ref<PartialDeep<T>>(initialValuesFactory());
+  const currentValues = ref<PartialDeep<T>>(cloner(initialValues));
   const fields = reactive<{ [key: string]: FieldMeta }>({});
   const valid = ref(true);
 
   applyValidation();
 
   const reset: FormContext<T>['reset'] = () => {
-    currentValues.value = initialValuesFactory();
+    currentValues.value = cloner(initialValues);
     applyValidation();
 
     // eslint-disable-next-line no-restricted-syntax, guard-for-in
