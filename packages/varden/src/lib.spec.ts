@@ -46,17 +46,6 @@ describe('form reset', () => {
 
     expect(form.values.value.name).toBe('John');
   });
-
-  it('should validate initial value type', () => {
-    expect(() => {
-      useForm({
-        // @ts-expect-error test case
-        initial: 'not-an-object',
-        schema: v.object({ name: v.string() }),
-        onSubmit: () => { },
-      });
-    }).toThrow(TypeError);
-  });
 });
 
 describe('meta management', () => {

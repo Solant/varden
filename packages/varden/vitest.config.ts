@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, type Plugin } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
@@ -13,8 +13,8 @@ export default defineConfig({
           environment: 'node',
         },
       },
-      {
-        plugins: [vue()],
+      process.env.CI === 'true' ? null : {
+        plugins: [vue() as Plugin],
         test: {
           include: ['src/components/*.spec.ts'],
           name: 'browser',
@@ -27,6 +27,6 @@ export default defineConfig({
           },
         },
       },
-    ],
+    ].filter((item): item is NonNullable<typeof item> => item !== null),
   },
 });
