@@ -37,4 +37,13 @@ export default [
       },
     },
   },
+
+  {
+    files: ['vitest.config.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
 ];

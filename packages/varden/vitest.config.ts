@@ -27,6 +27,6 @@ export default defineConfig({
           },
         },
       } : null,
-      ].filter((item): item is NonNullable<typeof item> => item !== null),
+    ].filter((item): item is NonNullable<typeof item> => item !== null),
   },
 });
