@@ -98,6 +98,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       const index = paths.indexOf(field);
       if (index === -1) {
         meta.error = '';
+        // eslint-disable-next-line no-continue
         continue;
       }
 
