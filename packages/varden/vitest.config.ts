@@ -13,7 +13,7 @@ export default defineConfig({
           environment: 'node',
         },
       },
-      process.env.CI === 'true' ? {
+      process.env.CI === 'true' ? null : {
         plugins: [vue() as Plugin],
         test: {
           include: ['src/components/*.spec.ts'],
@@ -26,7 +26,7 @@ export default defineConfig({
             instances: [{ browser: 'chromium' }],
           },
         },
-      } : null,
+      },
     ].filter((item): item is NonNullable<typeof item> => item !== null),
   },
 });
