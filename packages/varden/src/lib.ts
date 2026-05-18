@@ -89,7 +89,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     if (value !== undefined) {
       set(currentValues.value, cPath, value);
 
-      const meta = fields[path];
+      const meta = fields.get(path);
       if (meta !== undefined) {
         meta.dirty = false;
         meta.touched = false;
@@ -98,7 +98,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       // eslint-disable-next-line no-restricted-syntax
       for (const nestedPath in fields) {
         if (nestedPath.startsWith(`${path}.`)) {
-          const meta2 = fields[nestedPath];
+          const meta2 = fields.get(nestedPath);
           if (meta2 !== undefined) {
             meta2.dirty = false;
             meta2.touched = false;
@@ -107,11 +107,11 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       }
     } else {
       del(currentValues.value, cPath);
-      delete fields[path];
+      fields.delete(path);
       // eslint-disable-next-line no-restricted-syntax
       for (const field in fields) {
         if (field.startsWith(`${path}.`)) {
-          delete fields[field];
+          fields.delete(field);
         }
       }
     }

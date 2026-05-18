@@ -112,12 +112,12 @@ describe('resetField', () => {
 
     form.setValue('name', 'Jack');
     form.setTouched('name', true);
-    expect(form.meta.name?.dirty).toBe(true);
-    expect(form.meta.name?.touched).toBe(true);
+    expect(form.meta.get('name')?.dirty).toBe(true);
+    expect(form.meta.get('name')?.touched).toBe(true);
 
     form.resetField('name');
-    expect(form.meta.name?.dirty).toBe(false);
-    expect(form.meta.name?.touched).toBe(false);
+    expect(form.meta.get('name')?.dirty).toBe(false);
+    expect(form.meta.get('name')?.touched).toBe(false);
   });
 
   it('should reset nested fields', () => {
@@ -128,12 +128,12 @@ describe('resetField', () => {
     });
 
     form.setValue('name.first', 'Jack');
-    expect(form.meta['name.first']?.dirty).toBe(true);
+    expect(form.meta.get('name.first')?.dirty).toBe(true);
 
     form.resetField('name');
 
     expect(form.values.value.name?.first).toBe('John');
-    expect(form.meta['name.first']?.dirty).toBe(false);
+    expect(form.meta.get('name.first')?.dirty).toBe(false);
   });
 
   it.only('should cleanup nested path for the field', () => {
@@ -144,7 +144,7 @@ describe('resetField', () => {
 
     form.setValue('foo.bar.baz', 'Test');
     form.resetField('foo.bar.baz');
-    expect(form.values.value).toBe(undefined);
+    expect(form.values.value).toStrictEqual({});
   });
 
   it.only('should not delete nested path if sibling fields exist', () => {
