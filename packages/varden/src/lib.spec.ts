@@ -62,11 +62,11 @@ describe('meta management', () => {
     scope.run(() => {
       const name2 = form.useFieldValue('name');
       expect(name2.value).toBe('Jack');
-      expect(form.meta.name?.refCount).toBe(2);
+      expect(form.meta.get('name')?.refCount).toBe(2);
     });
     scope.stop();
 
-    expect(form.meta.name?.refCount).toBe(1);
+    expect(form.meta.get('name')?.refCount).toBe(1);
     expect(name.value).toBe('Jack');
   });
 

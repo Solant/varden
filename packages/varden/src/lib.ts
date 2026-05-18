@@ -46,7 +46,7 @@ export interface FormContext<T> {
   getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
   valid: Ref<boolean>;
-  meta: Reactive<Record<string, FieldMeta>>;
+  meta: Reactive<Map<string, FieldMeta>>;
   submit(): void;
   useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
     path: MaybeRefOrGetter<P>,
@@ -68,7 +68,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const initialValues: PartialDeep<T> = cloner(initial ?? {} as PartialDeep<T>);
 
   const currentValues = ref<PartialDeep<T>>(cloner(initialValues));
-  const fields = reactive<{ [key: string]: FieldMeta }>({});
+  const fields = reactive(new Map<string, FieldMeta>());
   const valid = ref(true);
 
   applyValidation();
@@ -77,9 +77,8 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     currentValues.value = cloner(initialValues);
     applyValidation();
 
-    // eslint-disable-next-line no-restricted-syntax, guard-for-in
-    for (const field in fields) {
-      fields[field]!.touched = false;
+    for (const [, meta] of fields) {
+      meta.touched = false;
     }
   };
 
@@ -95,16 +94,15 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
     valid.value = issues.length === 0;
 
-    // eslint-disable-next-line no-restricted-syntax, guard-for-in
-    for (const field in fields) {
+    for (const [field, meta] of fields) {
       const index = paths.indexOf(field);
       if (index === -1) {
-        fields[field]!.error = '';
+        meta.error = '';
         // eslint-disable-next-line no-continue
         continue;
       }
 
-      fields[field]!.error = issues[index]!.message;
+      meta.error = issues[index]!.message;
 
       issues.splice(index, 1);
       paths.splice(index, 1);
@@ -124,34 +122,34 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
         error,
         refCount: 0,
       };
-      fields[path] = meta;
+      fields.set(path, meta);
     }
   }
 
   function releaseField(path: string) {
-    const meta = fields[path];
+    const meta = fields.get(path);
     if (meta !== undefined) {
       meta.refCount -= 1;
       if (meta.refCount === 0) {
-        delete fields[path];
+        fields.delete(path);
         resetField(path as Paths<T>);
       }
     }
   }
 
   function accquireField(path: string) {
-    const meta = fields[path];
+    const meta = fields.get(path);
     if (meta !== undefined) {
       meta.refCount += 1;
       return;
     }
 
-    fields[path] = {
+    fields.set(path, {
       touched: false,
       dirty: false,
       error: '',
       refCount: 1,
-    };
+    });
   }
 
   const useFieldValue: FormContext<T>['useFieldValue'] = (fieldPath) => {
@@ -164,7 +162,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       if (previousPath) releaseField(previousPath);
       accquireField(currentPath);
 
-      meta = fields[currentPath]!;
+      meta = fields.get(currentPath)!;
       path = currentPath;
     }, { immediate: true });
 
@@ -185,12 +183,13 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   };
 
   const useFieldTouch: FormContext<T>['useFieldTouch'] = (path) => (flag?: boolean | FocusEvent) => {
-    fields[path]!.touched = flag instanceof FocusEvent ? true : (flag ?? true);
+    fields.get(path)!.touched = flag instanceof FocusEvent ? true : (flag ?? true);
   };
 
   const useFieldError: FormContext<T>['useFieldError'] = (path) => computed<string>(() => {
-    if (fields[path]!.touched) {
-      return fields[path]!.error;
+    const meta = fields.get(path)!;
+    if (meta.touched) {
+      return meta.error;
     }
     return '';
   });
@@ -203,12 +202,12 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
   const useArrayFieldValue: FormContext<T>['useArrayFieldValue'] = (path) => {
     const compiledPath = toCompiledPath(path);
-    let meta = fields[path];
+    let meta = fields.get(path);
     if (meta === undefined) {
       meta = {
         touched: false, dirty: false, error: '', refCount: 1,
       };
-      fields[path] = meta;
+      fields.set(path, meta);
     } else {
       meta.refCount += 1;
     }
@@ -230,9 +229,8 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const useArrayField: FormContext<T>['useArrayField'] = (path) => [useArrayFieldValue(path)];
 
   const dirty: FormContext<T>['dirty'] = computed<boolean>(() => {
-    // eslint-disable-next-line
-    for (const field in fields) {
-      if (fields[field]?.dirty === true) {
+    for (const [, meta] of fields) {
+      if (meta.dirty === true) {
         return true;
       }
     }
@@ -248,12 +246,13 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value) {
       set(currentValues.value, toCompiledPath(path), value);
 
-      if (fields[path]) {
-        fields[path].dirty = get(initialValues, toCompiledPath(path)) !== value;
+      const meta = fields.get(path);
+      if (meta) {
+        meta.dirty = get(initialValues, toCompiledPath(path)) !== value;
       } else {
-        fields[path] = {
+        fields.set(path, {
           dirty: true, touched: false, error: '', refCount: 0, manual: true,
-        };
+        });
       }
       applyValidation();
     },
@@ -261,14 +260,13 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       return get(currentValues.value, toCompiledPath(path));
     },
     setTouched<Path extends Paths<T>>(path: Path, flag = true) {
-      fields[path]!.touched = flag;
+      fields.get(path)!.touched = flag;
     },
     valid,
     submit() {
       if (!valid.value) {
-        // eslint-disable-next-line no-restricted-syntax, guard-for-in
-        for (const field in fields) {
-          fields[field]!.touched = true;
+        for (const [, meta] of fields) {
+          meta.touched = true;
         }
         return;
       }

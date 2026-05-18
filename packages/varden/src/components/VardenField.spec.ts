@@ -31,12 +31,12 @@ describe('meta management', () => {
       },
     });
 
-    expect(form.meta.name?.refCount).toBe(1);
+    expect(form.meta.get('name')?.refCount).toBe(1);
     expect(wrapper.find('[data-testid="name-input"]').exists()).toBe(true);
 
     wrapper.unmount();
 
-    expect(form.meta.name).toBeUndefined();
+    expect(form.meta.get('name')).toBeUndefined();
   });
 
   it('should not reset field value when another component instance still references it', async () => {
@@ -71,17 +71,17 @@ describe('meta management', () => {
       },
     });
 
-    expect(form.meta.name?.refCount).toBe(2);
+    expect(form.meta.get('name')?.refCount).toBe(2);
 
     form.setValue('name', 'TestValue');
     expect(form.values.value.name).toBe('TestValue');
 
     wrapper1.unmount();
-    expect(form.meta.name?.refCount).toBe(1);
+    expect(form.meta.get('name')?.refCount).toBe(1);
     expect(form.values.value.name).toBe('TestValue');
 
     wrapper2.unmount();
-    expect(form.meta.name).toBeUndefined();
+    expect(form.meta.get('name')).toBeUndefined();
     expect(form.values.value.name).toBe(undefined);
   });
 });

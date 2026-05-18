@@ -17,8 +17,8 @@ describe('meta management', () => {
       onSubmit,
     });
 
-    expect(form.meta.name).toBeUndefined();
-    expect(form.meta.email).toBeUndefined();
+    expect(form.meta.get('name')).toBeUndefined();
+    expect(form.meta.get('email')).toBeUndefined();
 
     const wrapper = mount(VardenForm, {
       props: { form },
@@ -28,8 +28,8 @@ describe('meta management', () => {
       },
     });
 
-    expect(form.meta.name?.refCount).toBe(1);
-    expect(form.meta.email?.refCount).toBe(1);
+    expect(form.meta.get('name')?.refCount).toBe(1);
+    expect(form.meta.get('email')?.refCount).toBe(1);
 
     form.setValue('name', 'John');
     form.setValue('email', 'john@example.com');
@@ -39,8 +39,8 @@ describe('meta management', () => {
 
     wrapper.unmount();
 
-    expect(form.meta.name).toBeUndefined();
-    expect(form.meta.email).toBeUndefined();
+    expect(form.meta.get('name')).toBeUndefined();
+    expect(form.meta.get('email')).toBeUndefined();
   });
 
   it('should reset form values when reset is called', async () => {
@@ -67,7 +67,7 @@ describe('meta management', () => {
     await nextTick();
 
     expect(form.values.value.name).toBe('Initial');
-    expect(form.meta.name?.touched).toBe(false);
+    expect(form.meta.get('name')?.touched).toBe(false);
 
     wrapper.unmount();
   });
@@ -89,7 +89,7 @@ describe('meta management', () => {
 
     form.setValue('name', 'PersistentValue');
     expect(form.values.value.name).toBe('PersistentValue');
-    expect(form.meta.name?.refCount).toBe(1);
+    expect(form.meta.get('name')?.refCount).toBe(1);
 
     await nextTick();
     expect(form.values.value.name).toBe('PersistentValue');
