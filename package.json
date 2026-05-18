@@ -10,12 +10,13 @@
     "build": "pnpm --filter varden build"
   },
   "devDependencies": {
-    "vue-tsc": "^3.0.7",
-    "@stylistic/eslint-plugin": "^4.0.0",
-    "eslint": "^9.18.0",
-    "eslint-plugin-vue": "^10.0.0",
-    "eslint-stylistic-airbnb": "^3.0.2",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "eslint": "^10.4.0",
+    "eslint-plugin-import-x": "^4.16.2",
+    "eslint-plugin-vue": "^10.9.1",
+    "eslint-stylistic-airbnb": "^3.2.0",
     "globals": "^16.0.0",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.59.3",
+    "vue-tsc": "^3.2.9"
   }
 }
