@@ -46,7 +46,7 @@ export interface FormContext<T> {
   getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
   valid: Ref<boolean>;
-  meta: Reactive<Map<string, FieldMeta>>;
+  meta: Reactive<Map<Paths<T>, FieldMeta>>;
   submit(): void;
   useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
     path: MaybeRefOrGetter<P>,
@@ -271,7 +271,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   return {
     values: readonly(currentValues) as FormContext<T>['values'],
     dirty,
-    meta: fields,
+    meta: fields as FormContext<T>['meta'],
     reset,
     resetField,
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value) {
