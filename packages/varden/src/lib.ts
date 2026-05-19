@@ -18,6 +18,8 @@ import {
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
 import {
   type Paths, type Get, get, set, del, toCompiledPath,
+  Empty,
+  isEmptyObject,
 } from './path';
 
 type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } : Partial<T>;
@@ -85,33 +87,40 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const resetField: FormContext<T>['resetField'] = (path) => {
     const cPath = toCompiledPath(path);
 
-    const value = get(initialValues, cPath);
-    if (value !== undefined) {
-      set(currentValues.value, cPath, value);
+    const value = get(initialValues, cPath, Empty);
+    if (value !== Empty) {
+      set(currentValues.value, cPath, cloner(value));
+    } else {
+      del(currentValues.value, cPath);
+      for (let depth = cPath.length - 2; depth >= 0; depth -= 1) {
+        const val = get(currentValues.value, cPath, Empty, depth);
+        if (val !== Empty && isEmptyObject(val)) {
+          del(currentValues.value, cPath, depth);
+        }
+      }
+    }
 
-      const meta = fields.get(path);
-      if (meta !== undefined) {
+    // cleanup self
+    const meta = fields.get(path);
+    if (meta !== undefined) {
+      if (meta.refCount === 0) {
+        fields.delete(path);
+      } else {
         meta.dirty = false;
         meta.touched = false;
       }
+    }
 
-      // eslint-disable-next-line no-restricted-syntax
-      for (const nestedPath in fields) {
-        if (nestedPath.startsWith(`${path}.`)) {
-          const meta2 = fields.get(nestedPath);
-          if (meta2 !== undefined) {
-            meta2.dirty = false;
-            meta2.touched = false;
+    // cleanup child fields
+    for (const [nestedPath, nestedMeta] of fields) {
+      if (nestedPath.startsWith(`${path}.`)) {
+        if (nestedMeta !== undefined) {
+          if (nestedMeta.refCount === 0) {
+            fields.delete(nestedPath);
+          } else {
+            nestedMeta.dirty = false;
+            nestedMeta.touched = false;
           }
-        }
-      }
-    } else {
-      del(currentValues.value, cPath);
-      fields.delete(path);
-      // eslint-disable-next-line no-restricted-syntax
-      for (const field in fields) {
-        if (field.startsWith(`${path}.`)) {
-          fields.delete(field);
         }
       }
     }
