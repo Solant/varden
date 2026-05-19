@@ -8,7 +8,7 @@ export default defineConfig({
         test: {
           // an example of file based convention,
           // you don't have to follow it
-          include: ['src/*.spec.ts'],
+          include: ['src/*.spec.ts', 'tests/*.spec.ts'],
           name: 'unit',
           environment: 'node',
         },
