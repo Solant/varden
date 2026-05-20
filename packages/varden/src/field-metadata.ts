@@ -3,7 +3,6 @@ export interface FieldMeta {
   dirty: boolean;
   error: string;
   refCount: number;
-  manual?: true;
 }
 
 export function createFieldMeta(

@@ -270,7 +270,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       if (meta) {
         meta.dirty = get(initialValues, toCompiledPath(path)) !== value;
       } else {
-        fields.set(path, createFieldMeta(true, false, '', 0));
+        fields.set(path, createFieldMeta(false, true, '', 0));
       }
       applyValidation();
     },
