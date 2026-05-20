@@ -21,6 +21,7 @@ import {
   Empty,
   isEmptyObject,
 } from './path';
+import { createFieldMeta, type FieldMeta } from './field-metadata';
 
 type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } : Partial<T>;
 
@@ -29,14 +30,6 @@ interface FormProps<T> {
   initial?: PartialDeep<T>;
   onSubmit: (value: T) => Promise<void> | void;
   cloner?: <A>(arg: A) => A;
-}
-
-interface FieldMeta {
-  touched: boolean;
-  dirty: boolean;
-  error: string;
-  refCount: number;
-  manual?: true;
 }
 
 export interface FormContext<T> {
@@ -156,13 +149,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       const path = paths[index]!;
       const error = issues[index]!.message;
 
-      const meta = {
-        touched: false,
-        dirty: false,
-        error,
-        refCount: 0,
-      };
-      fields.set(path, meta);
+      fields.set(path, createFieldMeta(false, false, error, 0));
     }
   }
 
@@ -184,12 +171,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       return;
     }
 
-    fields.set(path, {
-      touched: false,
-      dirty: false,
-      error: '',
-      refCount: 1,
-    });
+    fields.set(path, createFieldMeta(false, false, '', 1));
   }
 
   const useFieldValue: FormContext<T>['useFieldValue'] = (fieldPath) => {
@@ -244,9 +226,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     const compiledPath = toCompiledPath(path);
     let meta = fields.get(path);
     if (meta === undefined) {
-      meta = {
-        touched: false, dirty: false, error: '', refCount: 1,
-      };
+      meta = createFieldMeta(false, false, '', 1);
       fields.set(path, meta);
     } else {
       meta.refCount += 1;
@@ -290,9 +270,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       if (meta) {
         meta.dirty = get(initialValues, toCompiledPath(path)) !== value;
       } else {
-        fields.set(path, {
-          dirty: true, touched: false, error: '', refCount: 0, manual: true,
-        });
+        fields.set(path, createFieldMeta(true, false, '', 0));
       }
       applyValidation();
     },
