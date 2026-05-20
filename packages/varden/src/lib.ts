@@ -70,7 +70,14 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
   const reset: FormContext<T>['reset'] = () => {
     currentValues.value = cloner(initialValues);
-    fields.clear();
+    for (const [path, meta] of fields) {
+      if (meta.refCount === 0) {
+        fields.delete(path);
+      } else {
+        meta.dirty = false;
+        meta.touched = false;
+      }
+    }
     applyValidation();
   };
 

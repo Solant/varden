@@ -59,4 +59,17 @@ describe('form reset meta', () => {
     form.reset();
     expect(form.meta.get('name')).toBe(undefined);
   });
+
+  it('should update metadata for registered field', () => {
+    const form = useForm({
+      schema: v.object({ name: v.string() }),
+      onSubmit: () => { },
+    });
+
+    const name = form.useFieldValue('name');
+    name.value = 'Jack';
+
+    form.reset();
+    expect(form.meta.get('name')?.dirty).toBe(false);
+  });
 });
