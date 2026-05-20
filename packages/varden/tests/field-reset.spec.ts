@@ -83,6 +83,18 @@ describe('resetField', () => {
     form.resetField('foo.bar.baz');
     expect(form.values.value).toStrictEqual({ foo: { qux: 'Test2' } });
   });
+  
+  it('should reset value on parent reset', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.object({ bar: v.string() }) }),
+      initial: { foo: { bar: 'Initial' } },
+      onSubmit: () => { },
+    });
+
+    form.setValue('foo.bar', 'Test');
+    form.resetField('foo');
+    expect(form.values.value.foo?.bar).toBe('Initial');
+  });
 });
 
 describe('field reset metadata', () => {
