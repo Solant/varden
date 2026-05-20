@@ -29,10 +29,19 @@ export function toCompiledPath(path: string): CompiledPath {
   return parts;
 }
 
+export const Empty = Symbol('empty');
+
+export function get(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  target: any,
+  path: CompiledPath,
+  defaultValue: unknown = undefined,
+  maxDepth: number = Infinity,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function get(target: any, path: CompiledPath, defaultValue: unknown = undefined): any {
+): any {
+  const limit = Math.min(path.length - 1, maxDepth);
   let object = target;
-  for (let i = 0; i < path.length - 1; i += 1) {
+  for (let i = 0; i < limit; i += 1) {
     if (typeof object === 'object' && object !== null && path[i]! in object) {
       object = object[path[i]!];
     } else {
@@ -40,7 +49,17 @@ export function get(target: any, path: CompiledPath, defaultValue: unknown = und
     }
   }
 
-  return object[path[path.length - 1]!];
+  return object[path[limit]!];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isEmptyObject(obj: any): boolean {
+  // eslint-disable-next-line no-unreachable-loop, guard-for-in, no-restricted-syntax
+  for (const _ in obj) {
+    return false;
+  }
+
+  return true;
 }
 
 export function isArrayIndex(path: string) {
@@ -72,9 +91,10 @@ export function set(target: any, path: CompiledPath, value: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function del(target: any, path: CompiledPath) {
+export function del(target: any, path: CompiledPath, maxDepth: number = Infinity) {
+  const limit = Math.min(path.length - 1, maxDepth);
   let object = target;
-  for (let i = 0; i < path.length - 1; i += 1) {
+  for (let i = 0; i < limit; i += 1) {
     if (typeof object === 'object' && object !== null && path[i]! in object) {
       object = object[path[i]!];
     } else {
@@ -82,5 +102,5 @@ export function del(target: any, path: CompiledPath) {
     }
   }
 
-  delete object[path[path.length - 1]!];
+  delete object[path[limit]!];
 }

@@ -18,6 +18,8 @@ import {
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
 import {
   type Paths, type Get, get, set, del, toCompiledPath,
+  Empty,
+  isEmptyObject,
 } from './path';
 
 type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } : Partial<T>;
@@ -46,7 +48,7 @@ export interface FormContext<T> {
   getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
   valid: Ref<boolean>;
-  meta: Reactive<Map<string, FieldMeta>>;
+  meta: Reactive<Map<Paths<T>, FieldMeta>>;
   submit(): void;
   useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
     path: MaybeRefOrGetter<P>,
@@ -83,7 +85,45 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   };
 
   const resetField: FormContext<T>['resetField'] = (path) => {
-    del(currentValues.value, toCompiledPath(path));
+    const cPath = toCompiledPath(path);
+
+    const value = get(initialValues, cPath, Empty);
+    if (value !== Empty) {
+      set(currentValues.value, cPath, cloner(value));
+    } else {
+      del(currentValues.value, cPath);
+      for (let depth = cPath.length - 2; depth >= 0; depth -= 1) {
+        const val = get(currentValues.value, cPath, Empty, depth);
+        if (val !== Empty && isEmptyObject(val)) {
+          del(currentValues.value, cPath, depth);
+        }
+      }
+    }
+
+    // cleanup self
+    const meta = fields.get(path);
+    if (meta !== undefined) {
+      if (meta.refCount === 0) {
+        fields.delete(path);
+      } else {
+        meta.dirty = false;
+        meta.touched = false;
+      }
+    }
+
+    // cleanup child fields
+    for (const [nestedPath, nestedMeta] of fields) {
+      if (nestedPath.startsWith(`${path}.`)) {
+        if (nestedMeta !== undefined) {
+          if (nestedMeta.refCount === 0) {
+            fields.delete(nestedPath);
+          } else {
+            nestedMeta.dirty = false;
+            nestedMeta.touched = false;
+          }
+        }
+      }
+    }
   };
 
   async function applyValidation() {
@@ -174,7 +214,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     return computed({
       get: () => get(currentValues.value, compiledPath.value),
       set(value) {
-        set(currentValues.value, compiledPath.value, value);
+        set(currentValues.value, compiledPath.value, cloner(value));
 
         meta.dirty = get(initialValues, compiledPath.value) !== value;
         applyValidation();
@@ -240,7 +280,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   return {
     values: readonly(currentValues) as FormContext<T>['values'],
     dirty,
-    meta: fields,
+    meta: fields as FormContext<T>['meta'],
     reset,
     resetField,
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value) {
