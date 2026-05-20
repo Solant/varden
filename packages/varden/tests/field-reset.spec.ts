@@ -84,3 +84,57 @@ describe('resetField', () => {
     expect(form.values.value).toStrictEqual({ foo: { qux: 'Test2' } });
   });
 });
+
+describe('field reset metadata', () => {
+  it('should delete unused metadata', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.string() }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('foo', 'Test');
+    expect(form.meta.get('foo')?.dirty).toBe(true);
+
+    form.resetField('foo');
+    expect(form.meta.get('foo')?.dirty).toBe(undefined);
+  });
+
+  it('should update metadata for registered field', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.string() }),
+      onSubmit: () => { },
+    });
+
+    const foo = form.useFieldValue('foo');
+    foo.value = 'Test';
+    expect(form.meta.get('foo')?.dirty).toBe(true);
+
+    form.resetField('foo');
+    expect(form.meta.get('foo')?.dirty).toBe(false);
+  });
+
+  it('should delete unused child metadata', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.object({ bar: v.string() }) }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('foo.bar', 'Test');
+    form.resetField('foo');
+    expect(form.meta.get('foo.bar')).toBe(undefined);
+  });
+
+  it('should update metadata for child registered field', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.object({ bar: v.string() }) }),
+      onSubmit: () => { },
+    });
+
+    const bar = form.useFieldValue('foo.bar');
+    bar.value = 'Test';
+    expect(form.meta.get('foo.bar')?.dirty).toBe(true);
+
+    form.resetField('foo');
+    expect(form.meta.get('foo.bar')?.dirty).toBe(false);
+  });
+});

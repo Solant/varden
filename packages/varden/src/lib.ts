@@ -214,7 +214,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     return computed({
       get: () => get(currentValues.value, compiledPath.value),
       set(value) {
-        set(currentValues.value, compiledPath.value, value);
+        set(currentValues.value, compiledPath.value, cloner(value));
 
         meta.dirty = get(initialValues, compiledPath.value) !== value;
         applyValidation();
