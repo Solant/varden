@@ -158,7 +158,6 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     if (meta !== undefined) {
       meta.refCount -= 1;
       if (meta.refCount === 0) {
-        fields.delete(path);
         resetField(path as Paths<T>);
       }
     }
