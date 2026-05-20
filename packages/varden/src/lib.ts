@@ -188,7 +188,6 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     }, { immediate: true });
 
     onScopeDispose(() => {
-      if (!path) return;
       releaseField(toValue(path));
     }, true);
 
