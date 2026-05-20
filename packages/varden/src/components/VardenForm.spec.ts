@@ -21,6 +21,7 @@ describe('meta management', () => {
     expect(form.meta.get('email')).toBeUndefined();
 
     const wrapper = mount(VardenForm, {
+      // @ts-expect-error typed vue component
       props: { form },
       slots: {
         // @ts-expect-error typed vue component
@@ -52,6 +53,7 @@ describe('meta management', () => {
     });
 
     const wrapper = mount(VardenForm, {
+      // @ts-expect-error typed vue component
       props: { form },
       slots: {
         // @ts-expect-error typed vue component
@@ -80,6 +82,7 @@ describe('meta management', () => {
     });
 
     const wrapper = mount(VardenForm, {
+      // @ts-expect-error typed vue component
       props: { form },
       slots: {
         // @ts-expect-error typed vue component
