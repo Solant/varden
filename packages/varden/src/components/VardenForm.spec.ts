@@ -69,7 +69,7 @@ describe('meta management', () => {
     await nextTick();
 
     expect(form.values.value.name).toBe('Initial');
-    expect(form.meta.get('name')?.touched).toBe(false);
+    expect(form.meta.get('name')?.touched).toBe(undefined);
 
     wrapper.unmount();
   });

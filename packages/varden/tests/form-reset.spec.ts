@@ -46,3 +46,17 @@ describe('form reset', () => {
     expect(form.values.value.name).toBe('John');
   });
 });
+
+describe('form reset meta', () => {
+  it('should delete unused field meta', () => {
+    const form = useForm({
+      initial: { name: 'John' },
+      schema: v.object({ name: v.string() }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('name', 'Jack');
+    form.reset();
+    expect(form.meta.get('name')).toBe(undefined);
+  });
+});

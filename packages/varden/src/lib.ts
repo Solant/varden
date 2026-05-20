@@ -70,11 +70,8 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
   const reset: FormContext<T>['reset'] = () => {
     currentValues.value = cloner(initialValues);
+    fields.clear();
     applyValidation();
-
-    for (const [, meta] of fields) {
-      meta.touched = false;
-    }
   };
 
   const resetField: FormContext<T>['resetField'] = (path) => {
@@ -207,7 +204,11 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   };
 
   const useFieldError: FormContext<T>['useFieldError'] = (path) => computed<string>(() => {
-    const meta = fields.get(path)!;
+    const meta = fields.get(path);
+    if (meta === undefined) {
+      return '';
+    }
+
     if (meta.touched) {
       return meta.error;
     }
