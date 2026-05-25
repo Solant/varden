@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
 
-import { useForm } from '../src/lib';
+import { useForm as useFormLib, type FormContext } from '../src/lib';
+import type { FieldMeta } from '../src/field-metadata';
+
+function useForm<T>(
+  ...args: Parameters<typeof useFormLib<T>>
+): FormContext<T> & { __meta: Map<string, FieldMeta> } {
+  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+}
 
 describe('form reset', () => {
   it('should reset form values', () => {
@@ -57,7 +64,7 @@ describe('form reset meta', () => {
 
     form.setValue('name', 'Jack');
     form.reset();
-    expect(form.meta.get('name')).toBe(undefined);
+    expect(form.__meta.get('name')).toBe(undefined);
   });
 
   it('should update metadata for registered field', () => {
@@ -70,6 +77,6 @@ describe('form reset meta', () => {
     name.value = 'Jack';
 
     form.reset();
-    expect(form.meta.get('name')?.dirty).toBe(false);
+    expect(form.__meta.get('name')?.dirty).toBe(false);
   });
 });

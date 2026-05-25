@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
 import { effectScope } from 'vue';
 
-import { useForm } from './lib';
+import { useForm as useFormLib, type FormContext } from './lib';
+import type { FieldMeta } from './field-metadata';
+
+function useForm<T>(
+  ...args: Parameters<typeof useFormLib<T>>
+): FormContext<T> & { __meta: Map<string, FieldMeta> } {
+  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+}
 
 describe('meta management', () => {
   it('should not reset field that is currently referenced', () => {
@@ -18,11 +25,11 @@ describe('meta management', () => {
     scope.run(() => {
       const name2 = form.useFieldValue('name');
       expect(name2.value).toBe('Jack');
-      expect(form.meta.get('name')?.refCount).toBe(2);
+      expect(form.__meta.get('name')?.refCount).toBe(2);
     });
     scope.stop();
 
-    expect(form.meta.get('name')?.refCount).toBe(1);
+    expect(form.__meta.get('name')?.refCount).toBe(1);
     expect(name.value).toBe('Jack');
   });
 

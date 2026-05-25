@@ -5,7 +5,6 @@ import {
   toRaw,
   readonly,
   type ComputedRef,
-  type Reactive,
   type Ref,
   type DeepReadonly,
   type WritableComputedRef,
@@ -41,7 +40,9 @@ export interface FormContext<T> {
   getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
   valid: Ref<boolean>;
-  meta: Reactive<Map<Paths<T>, FieldMeta>>;
+  isFieldDirty<Path extends Paths<T>>(path: Path): boolean;
+  isFieldTouched<Path extends Paths<T>>(path: Path): boolean;
+  isFieldInvalid<Path extends Paths<T>>(path: Path): boolean;
   submit(): void;
   useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
     path: MaybeRefOrGetter<P>,
@@ -266,7 +267,8 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   return {
     values: readonly(currentValues) as FormContext<T>['values'],
     dirty,
-    meta: fields as FormContext<T>['meta'],
+    // @ts-expect-error private field
+    __meta: fields,
     reset,
     resetField,
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value) {
@@ -297,6 +299,17 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
       onSubmit(cloner(toRaw(currentValues.value)));
     },
+    isFieldDirty<Path extends Paths<T>>(path: Path): boolean {
+      return fields.get(path)?.dirty ?? false;
+    },
+    isFieldTouched<Path extends Paths<T>>(path: Path): boolean {
+      return fields.get(path)?.touched ?? false;
+    },
+    isFieldInvalid<Path extends Paths<T>>(path: Path): boolean {
+      return (fields.get(path)?.error ?? '') !== '';
+    },
+
+    // composables
     useField,
     useFieldValue,
     useFieldTouch,
