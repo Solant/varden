@@ -5,7 +5,6 @@ import {
   toRaw,
   readonly,
   type ComputedRef,
-  type Reactive,
   type Ref,
   type DeepReadonly,
   type WritableComputedRef,
@@ -21,6 +20,7 @@ import {
   Empty,
   isEmptyObject,
 } from './path';
+import { createFieldMeta, type FieldMeta } from './field-metadata';
 
 type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } : Partial<T>;
 
@@ -29,14 +29,6 @@ interface FormProps<T> {
   initial?: PartialDeep<T>;
   onSubmit: (value: T) => Promise<void> | void;
   cloner?: <A>(arg: A) => A;
-}
-
-interface FieldMeta {
-  touched: boolean;
-  dirty: boolean;
-  error: string;
-  refCount: number;
-  manual?: true;
 }
 
 export interface FormContext<T> {
@@ -48,7 +40,9 @@ export interface FormContext<T> {
   getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
   valid: Ref<boolean>;
-  meta: Reactive<Map<Paths<T>, FieldMeta>>;
+  isFieldDirty<Path extends Paths<T>>(path: Path): boolean;
+  isFieldTouched<Path extends Paths<T>>(path: Path): boolean;
+  isFieldInvalid<Path extends Paths<T>>(path: Path): boolean;
   submit(): void;
   useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
     path: MaybeRefOrGetter<P>,
@@ -77,11 +71,15 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
   const reset: FormContext<T>['reset'] = () => {
     currentValues.value = cloner(initialValues);
-    applyValidation();
-
-    for (const [, meta] of fields) {
-      meta.touched = false;
+    for (const [path, meta] of fields) {
+      if (meta.refCount === 0) {
+        fields.delete(path);
+      } else {
+        meta.dirty = false;
+        meta.touched = false;
+      }
     }
+    applyValidation();
   };
 
   const resetField: FormContext<T>['resetField'] = (path) => {
@@ -156,13 +154,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       const path = paths[index]!;
       const error = issues[index]!.message;
 
-      const meta = {
-        touched: false,
-        dirty: false,
-        error,
-        refCount: 0,
-      };
-      fields.set(path, meta);
+      fields.set(path, createFieldMeta(false, false, error, 0));
     }
   }
 
@@ -171,7 +163,6 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     if (meta !== undefined) {
       meta.refCount -= 1;
       if (meta.refCount === 0) {
-        fields.delete(path);
         resetField(path as Paths<T>);
       }
     }
@@ -184,12 +175,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       return;
     }
 
-    fields.set(path, {
-      touched: false,
-      dirty: false,
-      error: '',
-      refCount: 1,
-    });
+    fields.set(path, createFieldMeta(false, false, '', 1));
   }
 
   const useFieldValue: FormContext<T>['useFieldValue'] = (fieldPath) => {
@@ -207,7 +193,6 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     }, { immediate: true });
 
     onScopeDispose(() => {
-      if (!path) return;
       releaseField(toValue(path));
     }, true);
 
@@ -227,7 +212,11 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   };
 
   const useFieldError: FormContext<T>['useFieldError'] = (path) => computed<string>(() => {
-    const meta = fields.get(path)!;
+    const meta = fields.get(path);
+    if (meta === undefined) {
+      return '';
+    }
+
     if (meta.touched) {
       return meta.error;
     }
@@ -244,9 +233,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     const compiledPath = toCompiledPath(path);
     let meta = fields.get(path);
     if (meta === undefined) {
-      meta = {
-        touched: false, dirty: false, error: '', refCount: 1,
-      };
+      meta = createFieldMeta(false, false, '', 1);
       fields.set(path, meta);
     } else {
       meta.refCount += 1;
@@ -280,7 +267,8 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   return {
     values: readonly(currentValues) as FormContext<T>['values'],
     dirty,
-    meta: fields as FormContext<T>['meta'],
+    // @ts-expect-error private field
+    __meta: fields,
     reset,
     resetField,
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value) {
@@ -290,9 +278,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       if (meta) {
         meta.dirty = get(initialValues, toCompiledPath(path)) !== value;
       } else {
-        fields.set(path, {
-          dirty: true, touched: false, error: '', refCount: 0, manual: true,
-        });
+        fields.set(path, createFieldMeta(false, true, '', 0));
       }
       applyValidation();
     },
@@ -313,6 +299,17 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
       onSubmit(cloner(toRaw(currentValues.value)));
     },
+    isFieldDirty<Path extends Paths<T>>(path: Path): boolean {
+      return fields.get(path)?.dirty ?? false;
+    },
+    isFieldTouched<Path extends Paths<T>>(path: Path): boolean {
+      return fields.get(path)?.touched ?? false;
+    },
+    isFieldInvalid<Path extends Paths<T>>(path: Path): boolean {
+      return (fields.get(path)?.error ?? '') !== '';
+    },
+
+    // composables
     useField,
     useFieldValue,
     useFieldTouch,

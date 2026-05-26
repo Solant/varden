@@ -5,9 +5,16 @@ import { mount } from '@vue/test-utils';
 import { nextTick, h } from 'vue';
 import * as v from 'valibot';
 
-import { useForm } from '../lib';
+import { useForm as useFormLib, type FormContext } from '../lib';
 import VardenForm from './VardenForm.vue';
 import VardenField from './VardenField.vue';
+import type { FieldMeta } from '../field-metadata';
+
+function useForm<T>(
+  ...args: Parameters<typeof useFormLib<T>>
+): FormContext<T> & { __meta: Map<string, FieldMeta> } {
+  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+}
 
 describe('meta management', () => {
   it('should preserve values when fields are actively referenced', async () => {
@@ -17,11 +24,10 @@ describe('meta management', () => {
       onSubmit,
     });
 
-    expect(form.meta.get('name')).toBeUndefined();
-    expect(form.meta.get('email')).toBeUndefined();
+    expect(form.__meta.get('name')).toBeUndefined();
+    expect(form.__meta.get('email')).toBeUndefined();
 
     const wrapper = mount(VardenForm, {
-      // @ts-expect-error typed vue component
       props: { form },
       slots: {
         // @ts-expect-error typed vue component
@@ -29,8 +35,8 @@ describe('meta management', () => {
       },
     });
 
-    expect(form.meta.get('name')?.refCount).toBe(1);
-    expect(form.meta.get('email')?.refCount).toBe(1);
+    expect(form.__meta.get('name')?.refCount).toBe(1);
+    expect(form.__meta.get('email')?.refCount).toBe(1);
 
     form.setValue('name', 'John');
     form.setValue('email', 'john@example.com');
@@ -40,8 +46,8 @@ describe('meta management', () => {
 
     wrapper.unmount();
 
-    expect(form.meta.get('name')).toBeUndefined();
-    expect(form.meta.get('email')).toBeUndefined();
+    expect(form.__meta.get('name')).toBeUndefined();
+    expect(form.__meta.get('email')).toBeUndefined();
   });
 
   it('should reset form values when reset is called', async () => {
@@ -53,7 +59,6 @@ describe('meta management', () => {
     });
 
     const wrapper = mount(VardenForm, {
-      // @ts-expect-error typed vue component
       props: { form },
       slots: {
         // @ts-expect-error typed vue component
@@ -69,7 +74,7 @@ describe('meta management', () => {
     await nextTick();
 
     expect(form.values.value.name).toBe('Initial');
-    expect(form.meta.get('name')?.touched).toBe(false);
+    expect(form.isFieldTouched('name')).toBe(false);
 
     wrapper.unmount();
   });
@@ -82,7 +87,6 @@ describe('meta management', () => {
     });
 
     const wrapper = mount(VardenForm, {
-      // @ts-expect-error typed vue component
       props: { form },
       slots: {
         // @ts-expect-error typed vue component
@@ -92,7 +96,7 @@ describe('meta management', () => {
 
     form.setValue('name', 'PersistentValue');
     expect(form.values.value.name).toBe('PersistentValue');
-    expect(form.meta.get('name')?.refCount).toBe(1);
+    expect(form.__meta.get('name')?.refCount).toBe(1);
 
     await nextTick();
     expect(form.values.value.name).toBe('PersistentValue');

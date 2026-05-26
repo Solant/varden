@@ -29,6 +29,11 @@ export default [
       'import-x/order': airbnb.configs['flat/addon-import'].rules['import-x/order'],
     },
   },
+  {
+    rules: {
+      'no-underscore-dangle': ['error', { allow: ['__meta'] }],
+    },
+  },
 
   {
     languageOptions: {

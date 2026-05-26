@@ -3,8 +3,15 @@ import { mount } from '@vue/test-utils';
 import { h } from 'vue';
 import * as v from 'valibot';
 
-import { useForm } from '../lib';
+import { useForm as useFormLib, type FormContext } from '../lib';
+import type { FieldMeta } from '../field-metadata';
 import VardenField from './VardenField.vue';
+
+function useForm<T>(
+  ...args: Parameters<typeof useFormLib<T>>
+): FormContext<T> & { __meta: Map<string, FieldMeta> } {
+  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+}
 
 describe('meta management', () => {
   it('should render field value through component', async () => {
@@ -31,12 +38,12 @@ describe('meta management', () => {
       },
     });
 
-    expect(form.meta.get('name')?.refCount).toBe(1);
+    expect(form.__meta.get('name')?.refCount).toBe(1);
     expect(wrapper.find('[data-testid="name-input"]').exists()).toBe(true);
 
     wrapper.unmount();
 
-    expect(form.meta.get('name')).toBeUndefined();
+    expect(form.__meta.get('name')).toBeUndefined();
   });
 
   it('should not reset field value when another component instance still references it', async () => {
@@ -71,17 +78,17 @@ describe('meta management', () => {
       },
     });
 
-    expect(form.meta.get('name')?.refCount).toBe(2);
+    expect(form.__meta.get('name')?.refCount).toBe(2);
 
     form.setValue('name', 'TestValue');
     expect(form.values.value.name).toBe('TestValue');
 
     wrapper1.unmount();
-    expect(form.meta.get('name')?.refCount).toBe(1);
+    expect(form.__meta.get('name')?.refCount).toBe(1);
     expect(form.values.value.name).toBe('TestValue');
 
     wrapper2.unmount();
-    expect(form.meta.get('name')).toBeUndefined();
+    expect(form.__meta.get('name')).toBeUndefined();
     expect(form.values.value.name).toBe(undefined);
   });
 });

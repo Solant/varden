@@ -26,12 +26,12 @@ describe('resetField', () => {
 
     form.setValue('name', 'Jack');
     form.setTouched('name', true);
-    expect(form.meta.get('name')?.dirty).toBe(true);
-    expect(form.meta.get('name')?.touched).toBe(true);
+    expect(form.isFieldDirty('name')).toBe(true);
+    expect(form.isFieldTouched('name')).toBe(true);
 
     form.resetField('name');
-    expect(form.meta.get('name')?.dirty).toBe(undefined);
-    expect(form.meta.get('name')?.touched).toBe(undefined);
+    expect(form.isFieldDirty('name')).toBe(false);
+    expect(form.isFieldTouched('name')).toBe(false);
   });
 
   it('should reset nested fields', () => {
@@ -42,12 +42,12 @@ describe('resetField', () => {
     });
 
     form.setValue('name.first', 'Jack');
-    expect(form.meta.get('name.first')?.dirty).toBe(true);
+    expect(form.isFieldDirty('name.first')).toBe(true);
 
     form.resetField('name');
 
     expect(form.values.value.name?.first).toBe('John');
-    expect(form.meta.get('name.first')?.dirty).toBe(undefined);
+    expect(form.isFieldDirty('name.first')).toBe(false);
   });
 
   it('should cleanup parent path for the field', () => {
@@ -83,6 +83,18 @@ describe('resetField', () => {
     form.resetField('foo.bar.baz');
     expect(form.values.value).toStrictEqual({ foo: { qux: 'Test2' } });
   });
+
+  it('should reset value on parent reset', () => {
+    const form = useForm({
+      schema: v.object({ foo: v.object({ bar: v.string() }) }),
+      initial: { foo: { bar: 'Initial' } },
+      onSubmit: () => { },
+    });
+
+    form.setValue('foo.bar', 'Test');
+    form.resetField('foo');
+    expect(form.values.value.foo?.bar).toBe('Initial');
+  });
 });
 
 describe('field reset metadata', () => {
@@ -93,10 +105,10 @@ describe('field reset metadata', () => {
     });
 
     form.setValue('foo', 'Test');
-    expect(form.meta.get('foo')?.dirty).toBe(true);
+    expect(form.isFieldDirty('foo')).toBe(true);
 
     form.resetField('foo');
-    expect(form.meta.get('foo')?.dirty).toBe(undefined);
+    expect(form.isFieldDirty('foo')).toBe(false);
   });
 
   it('should update metadata for registered field', () => {
@@ -107,10 +119,10 @@ describe('field reset metadata', () => {
 
     const foo = form.useFieldValue('foo');
     foo.value = 'Test';
-    expect(form.meta.get('foo')?.dirty).toBe(true);
+    expect(form.isFieldDirty('foo')).toBe(true);
 
     form.resetField('foo');
-    expect(form.meta.get('foo')?.dirty).toBe(false);
+    expect(form.isFieldDirty('foo')).toBe(false);
   });
 
   it('should delete unused child metadata', () => {
@@ -121,7 +133,7 @@ describe('field reset metadata', () => {
 
     form.setValue('foo.bar', 'Test');
     form.resetField('foo');
-    expect(form.meta.get('foo.bar')).toBe(undefined);
+    expect(form.isFieldDirty('foo.bar')).toBe(false);
   });
 
   it('should update metadata for child registered field', () => {
@@ -132,9 +144,9 @@ describe('field reset metadata', () => {
 
     const bar = form.useFieldValue('foo.bar');
     bar.value = 'Test';
-    expect(form.meta.get('foo.bar')?.dirty).toBe(true);
+    expect(form.isFieldDirty('foo.bar')).toBe(true);
 
     form.resetField('foo');
-    expect(form.meta.get('foo.bar')?.dirty).toBe(false);
+    expect(form.isFieldDirty('foo.bar')).toBe(false);
   });
 });

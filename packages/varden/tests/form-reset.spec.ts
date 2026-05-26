@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
 
-import { useForm } from '../src/lib';
+import { useForm as useFormLib, type FormContext } from '../src/lib';
+import type { FieldMeta } from '../src/field-metadata';
+
+function useForm<T>(
+  ...args: Parameters<typeof useFormLib<T>>
+): FormContext<T> & { __meta: Map<string, FieldMeta> } {
+  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+}
 
 describe('form reset', () => {
   it('should reset form values', () => {
@@ -44,5 +51,32 @@ describe('form reset', () => {
     form.reset();
 
     expect(form.values.value.name).toBe('John');
+  });
+});
+
+describe('form reset meta', () => {
+  it('should delete unused field meta', () => {
+    const form = useForm({
+      initial: { name: 'John' },
+      schema: v.object({ name: v.string() }),
+      onSubmit: () => { },
+    });
+
+    form.setValue('name', 'Jack');
+    form.reset();
+    expect(form.__meta.get('name')).toBe(undefined);
+  });
+
+  it('should update metadata for registered field', () => {
+    const form = useForm({
+      schema: v.object({ name: v.string() }),
+      onSubmit: () => { },
+    });
+
+    const name = form.useFieldValue('name');
+    name.value = 'Jack';
+
+    form.reset();
+    expect(form.__meta.get('name')?.dirty).toBe(false);
   });
 });
