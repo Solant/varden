@@ -50,9 +50,24 @@ export interface _FormContext<T> extends FormContext<T> {
   __meta: Map<Paths<T>, FieldMeta>;
 }
 
+// eslint-disable-next-line no-underscore-dangle
+let _equalsFn: FormProps<unknown>['equalsFn'] & {} = (a, b) => a === b;
+// eslint-disable-next-line no-underscore-dangle
+let _cloneFn: FormProps<unknown>['cloneFn'] & {} = structuredClone;
+
+export function defineVardenConfig(config: { equalsFn?: FormProps<unknown>['equalsFn']; cloneFn?: FormProps<unknown>['cloneFn'] }) {
+  if (config.equalsFn) _equalsFn = config.equalsFn;
+  if (config.cloneFn) _cloneFn = config.cloneFn;
+}
+
+export function resetVardenConfig() {
+  _equalsFn = (a, b) => a === b;
+  _cloneFn = structuredClone;
+}
+
 export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const {
-    initial, schema, onSubmit, cloneFn = structuredClone, equalsFn = (a, b) => a === b,
+    initial, schema, onSubmit, cloneFn = _cloneFn, equalsFn = _equalsFn,
   } = props;
 
   const initialValues: PartialDeep<T> = cloneFn(initial ?? {} as PartialDeep<T>);
