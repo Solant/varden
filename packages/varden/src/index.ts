@@ -1,5 +1,9 @@
 export { useForm, type FormContext } from './lib';
 
+export {
+  useFieldValue, useFieldDirty, useFieldError, useFieldTouched,
+} from './composables';
+
 export { default as VardenForm } from './components/VardenForm.vue';
 export { default as VardenField } from './components/VardenField.vue';
 export { default as VardenInput } from './components/VardenInput.vue';
