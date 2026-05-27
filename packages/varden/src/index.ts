@@ -1,4 +1,6 @@
-export { useForm, type FormContext } from './lib';
+export {
+  useForm, type FormContext, defineVardenConfig, resetVardenConfig,
+} from './lib';
 
 export {
   useFieldValue, useFieldDirty, useFieldError, useFieldTouched, useField,
