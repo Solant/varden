@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
 
 import { useForm as useFormLib, type FormContext } from '../src/lib';
+import { useFieldValue } from '../src/composables';
 import type { FieldMeta } from '../src/field-metadata';
 
 function useForm<T>(
@@ -73,7 +74,7 @@ describe('form reset meta', () => {
       onSubmit: () => { },
     });
 
-    const name = form.useFieldValue('name');
+    const name = useFieldValue(form, 'name');
     name.value = 'Jack';
 
     form.reset();

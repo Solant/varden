@@ -74,7 +74,7 @@ describe('meta management', () => {
     await nextTick();
 
     expect(form.values.value.name).toBe('Initial');
-    expect(form.isFieldTouched('name')).toBe(false);
+    expect(form.isTouched('name')).toBe(false);
 
     wrapper.unmount();
   });

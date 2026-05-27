@@ -24,7 +24,7 @@ describe('meta management', () => {
       // @ts-expect-error typed vue component
       props: { form, path: 'name' },
       slots: {
-        default: ({ field, error }: { field: { modelValue: string }; error: string }) => h('div', [
+        default: ({ field, error }: { field: { modelValue: string }; error: string | null }) => h('div', [
           h('input', {
             'data-testid': 'name-input',
             value: field.modelValue,
@@ -33,7 +33,7 @@ describe('meta management', () => {
               field.modelValue = (e.target as HTMLInputElement).value;
             },
           }),
-          h('span', { 'data-testid': 'error' }, error),
+          h('span', { 'data-testid': 'error' }, error ?? ''),
         ]),
       },
     });

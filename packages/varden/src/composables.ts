@@ -55,7 +55,7 @@ export function useFieldTouched<T, Path extends Paths<T>>(
 export function useFieldValue<T>(
   form: FormContext<T>,
   path: MaybeRefOrGetter<Paths<T>>,
-): ComputedRef<Get<T, Paths<T>>> {
+): WritableComputedRef<Get<T, Paths<T>>> {
   const compiledPath = computed(() => toCompiledPath(toValue(path)));
 
   watch(() => toValue(path), (currentPath, previousPath) => {
@@ -80,4 +80,23 @@ export function useFieldError<T, Path extends Paths<T>>(
   path: MaybeRefOrGetter<Path>,
 ): ComputedRef<string | null> {
   return computed(() => form.getError(toValue(path)));
+}
+
+export function useField<T>(
+  form: FormContext<T>,
+  path: MaybeRefOrGetter<Paths<T>>,
+): [
+  modelValue: WritableComputedRef<Get<T, Paths<T>>>,
+  touch: () => void,
+  error: ComputedRef<string | null>,
+] {
+  const modelValue = useFieldValue(form, path);
+  const touch = () => form.setTouched(toValue(path), true);
+  const error = useFieldError(form, path);
+
+  return [
+    modelValue,
+    touch,
+    error,
+  ] as const;
 }
