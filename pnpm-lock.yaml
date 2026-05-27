@@ -94,6 +94,9 @@ importers:
       changelogen:
         specifier: ^0.6.2
         version: 0.6.2(magicast@0.3.5)
+      dequal:
+        specifier: ^2.0.3
+        version: 2.0.3
       playwright:
         specifier: ^1.58.2
         version: 1.58.2

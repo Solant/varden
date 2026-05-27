@@ -24,6 +24,8 @@ interface FormProps<T> {
   initial?: PartialDeep<T>;
   onSubmit: (value: T) => Promise<void> | void;
   cloneFn?: <A>(arg: A) => A;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  equalsFn?: (a: any, b: any) => boolean;
 }
 
 export interface FormContext<T> {
@@ -50,7 +52,7 @@ export interface _FormContext<T> extends FormContext<T> {
 
 export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const {
-    initial, schema, onSubmit, cloneFn = structuredClone,
+    initial, schema, onSubmit, cloneFn = structuredClone, equalsFn = (a, b) => a === b,
   } = props;
 
   const initialValues: PartialDeep<T> = cloneFn(initial ?? {} as PartialDeep<T>);
@@ -176,11 +178,11 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       set(currentValues.value, compiledPath, cloneFn(value));
 
       const meta = fields.get(stringPath);
+      const isDirty = !equalsFn(get(initialValues, compiledPath), value);
       if (meta) {
-        meta.dirty = get(initialValues, compiledPath)
-          !== value;
+        meta.dirty = isDirty;
       } else {
-        fields.set(stringPath, createFieldMeta(false, true, '', 0));
+        fields.set(stringPath, createFieldMeta(false, isDirty, '', 0));
       }
       applyValidation();
     },
