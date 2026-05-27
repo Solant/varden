@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
 
 import { useForm } from '../src/lib';
+import { useFieldValue } from '../src/composables';
 
 describe('resetField', () => {
   it('should reset field to initial value', () => {
@@ -26,12 +27,12 @@ describe('resetField', () => {
 
     form.setValue('name', 'Jack');
     form.setTouched('name', true);
-    expect(form.isFieldDirty('name')).toBe(true);
-    expect(form.isFieldTouched('name')).toBe(true);
+    expect(form.isDirty('name')).toBe(true);
+    expect(form.isTouched('name')).toBe(true);
 
     form.resetField('name');
-    expect(form.isFieldDirty('name')).toBe(false);
-    expect(form.isFieldTouched('name')).toBe(false);
+    expect(form.isDirty('name')).toBe(false);
+    expect(form.isTouched('name')).toBe(false);
   });
 
   it('should reset nested fields', () => {
@@ -42,12 +43,12 @@ describe('resetField', () => {
     });
 
     form.setValue('name.first', 'Jack');
-    expect(form.isFieldDirty('name.first')).toBe(true);
+    expect(form.isDirty('name.first')).toBe(true);
 
     form.resetField('name');
 
     expect(form.values.value.name?.first).toBe('John');
-    expect(form.isFieldDirty('name.first')).toBe(false);
+    expect(form.isDirty('name.first')).toBe(false);
   });
 
   it('should cleanup parent path for the field', () => {
@@ -105,10 +106,10 @@ describe('field reset metadata', () => {
     });
 
     form.setValue('foo', 'Test');
-    expect(form.isFieldDirty('foo')).toBe(true);
+    expect(form.isDirty('foo')).toBe(true);
 
     form.resetField('foo');
-    expect(form.isFieldDirty('foo')).toBe(false);
+    expect(form.isDirty('foo')).toBe(false);
   });
 
   it('should update metadata for registered field', () => {
@@ -117,12 +118,12 @@ describe('field reset metadata', () => {
       onSubmit: () => { },
     });
 
-    const foo = form.useFieldValue('foo');
+    const foo = useFieldValue(form, 'foo');
     foo.value = 'Test';
-    expect(form.isFieldDirty('foo')).toBe(true);
+    expect(form.isDirty('foo')).toBe(true);
 
     form.resetField('foo');
-    expect(form.isFieldDirty('foo')).toBe(false);
+    expect(form.isDirty('foo')).toBe(false);
   });
 
   it('should delete unused child metadata', () => {
@@ -133,7 +134,7 @@ describe('field reset metadata', () => {
 
     form.setValue('foo.bar', 'Test');
     form.resetField('foo');
-    expect(form.isFieldDirty('foo.bar')).toBe(false);
+    expect(form.isDirty('foo.bar')).toBe(false);
   });
 
   it('should update metadata for child registered field', () => {
@@ -142,11 +143,11 @@ describe('field reset metadata', () => {
       onSubmit: () => { },
     });
 
-    const bar = form.useFieldValue('foo.bar');
+    const bar = useFieldValue(form, 'foo.bar');
     bar.value = 'Test';
-    expect(form.isFieldDirty('foo.bar')).toBe(true);
+    expect(form.isDirty('foo.bar')).toBe(true);
 
     form.resetField('foo');
-    expect(form.isFieldDirty('foo.bar')).toBe(false);
+    expect(form.isDirty('foo.bar')).toBe(false);
   });
 });

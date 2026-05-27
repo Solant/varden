@@ -3,6 +3,7 @@ import * as v from 'valibot';
 import { effectScope } from 'vue';
 
 import { useForm as useFormLib, type FormContext } from './lib';
+import { useFieldValue } from './composables';
 import type { FieldMeta } from './field-metadata';
 
 function useForm<T>(
@@ -18,12 +19,12 @@ describe('meta management', () => {
       onSubmit: () => { },
     });
 
-    const name = form.useFieldValue('name');
+    const name = useFieldValue(form, 'name');
     name.value = 'Jack';
 
     const scope = effectScope();
     scope.run(() => {
-      const name2 = form.useFieldValue('name');
+      const name2 = useFieldValue(form, 'name');
       expect(name2.value).toBe('Jack');
       expect(form.__meta.get('name')?.refCount).toBe(2);
     });
@@ -42,7 +43,7 @@ describe('meta management', () => {
 
     const scope = effectScope();
     scope.run(() => {
-      const name = form.useFieldValue('name');
+      const name = useFieldValue(form, 'name');
       name.value = 'Jack';
       expect(form.values.value.name).toBe('Jack');
     });

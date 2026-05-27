@@ -1,14 +1,14 @@
 export interface FieldMeta {
   touched: boolean;
   dirty: boolean;
-  error: string;
+  error: string | null;
   refCount: number;
 }
 
 export function createFieldMeta(
   touched: boolean,
   dirty: boolean,
-  error: string,
+  error: string | null,
   refCount: number,
 ): FieldMeta {
   return {

@@ -2,16 +2,10 @@ import {
   computed,
   reactive,
   ref,
-  toRaw,
   readonly,
   type ComputedRef,
   type Ref,
   type DeepReadonly,
-  type WritableComputedRef,
-  onScopeDispose,
-  type MaybeRefOrGetter,
-  watch,
-  toValue,
 } from 'vue';
 
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
@@ -19,6 +13,7 @@ import {
   type Paths, type Get, get, set, del, toCompiledPath,
   Empty,
   isEmptyObject,
+  type CompiledPath,
 } from './path';
 import { createFieldMeta, type FieldMeta } from './field-metadata';
 
@@ -28,7 +23,7 @@ interface FormProps<T> {
   schema: StandardSchemaV1<T>;
   initial?: PartialDeep<T>;
   onSubmit: (value: T) => Promise<void> | void;
-  cloner?: <A>(arg: A) => A;
+  cloneFn?: <A>(arg: A) => A;
 }
 
 export interface FormContext<T> {
@@ -36,41 +31,38 @@ export interface FormContext<T> {
   dirty: ComputedRef<boolean>;
   reset(): void;
   resetField<Path extends Paths<T>>(path: Path): void;
-  setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value): void;
-  getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value;
+  setValue<Path extends Paths<T>, Value extends Get<T, Path>>(
+    path: Path | CompiledPath,
+    value: Value,
+  ): void;
+  getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
+  isTouched<Path extends Paths<T>>(path: Path): boolean;
   valid: Ref<boolean>;
-  isFieldDirty<Path extends Paths<T>>(path: Path): boolean;
-  isFieldTouched<Path extends Paths<T>>(path: Path): boolean;
-  isFieldInvalid<Path extends Paths<T>>(path: Path): boolean;
+  isDirty<Path extends Paths<T>>(path: Path): boolean;
+  getError<Path extends Paths<T>>(path: Path): string | null;
   submit(): void;
-  useFieldValue<P extends Paths<T>, V extends Get<T, P>>(
-    path: MaybeRefOrGetter<P>,
-  ): WritableComputedRef<V>;
-  useFieldTouch<P extends Paths<T>>(path: P): (flag?: boolean | FocusEvent) => void;
-  useFieldError<P extends Paths<T>>(path: P): ComputedRef<string>;
-  useField<P extends Paths<T>, V extends Get<T, P>>(
-    path: P,
-  ): [WritableComputedRef<V>, (flag?: boolean | FocusEvent) => void, ComputedRef<string>];
-  useArrayFieldValue<P extends Paths<T>, V extends Get<T, P>>(path: P): WritableComputedRef<V>;
-  useArrayField<P extends Paths<T>, V extends Get<T, P>>(path: P): [WritableComputedRef<V>];
+}
+
+export interface _FormContext<T> extends FormContext<T> {
+  __meta: Map<Paths<T>, FieldMeta>;
 }
 
 export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
   const {
-    initial, schema, onSubmit, cloner = structuredClone,
+    initial, schema, onSubmit, cloneFn = structuredClone,
   } = props;
 
-  const initialValues: PartialDeep<T> = cloner(initial ?? {} as PartialDeep<T>);
+  const initialValues: PartialDeep<T> = cloneFn(initial ?? {} as PartialDeep<T>);
 
-  const currentValues = ref<PartialDeep<T>>(cloner(initialValues));
+  const currentValues = ref<PartialDeep<T>>(cloneFn(initialValues));
   const fields = reactive(new Map<string, FieldMeta>());
   const valid = ref(true);
 
   applyValidation();
 
   const reset: FormContext<T>['reset'] = () => {
-    currentValues.value = cloner(initialValues);
+    currentValues.value = cloneFn(initialValues);
     for (const [path, meta] of fields) {
       if (meta.refCount === 0) {
         fields.delete(path);
@@ -87,7 +79,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
     const value = get(initialValues, cPath, Empty);
     if (value !== Empty) {
-      set(currentValues.value, cPath, cloner(value));
+      set(currentValues.value, cPath, cloneFn(value));
     } else {
       del(currentValues.value, cPath);
       for (let depth = cPath.length - 2; depth >= 0; depth -= 1) {
@@ -158,103 +150,6 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     }
   }
 
-  function releaseField(path: string) {
-    const meta = fields.get(path);
-    if (meta !== undefined) {
-      meta.refCount -= 1;
-      if (meta.refCount === 0) {
-        resetField(path as Paths<T>);
-      }
-    }
-  }
-
-  function accquireField(path: string) {
-    const meta = fields.get(path);
-    if (meta !== undefined) {
-      meta.refCount += 1;
-      return;
-    }
-
-    fields.set(path, createFieldMeta(false, false, '', 1));
-  }
-
-  const useFieldValue: FormContext<T>['useFieldValue'] = (fieldPath) => {
-    const compiledPath = computed(() => toCompiledPath(toValue(fieldPath)));
-
-    let path: typeof fieldPath;
-    let meta: FieldMeta;
-
-    watch(() => toValue(fieldPath), (currentPath, previousPath) => {
-      if (previousPath) releaseField(previousPath);
-      accquireField(currentPath);
-
-      meta = fields.get(currentPath)!;
-      path = currentPath;
-    }, { immediate: true });
-
-    onScopeDispose(() => {
-      releaseField(toValue(path));
-    }, true);
-
-    return computed({
-      get: () => get(currentValues.value, compiledPath.value),
-      set(value) {
-        set(currentValues.value, compiledPath.value, cloner(value));
-
-        meta.dirty = get(initialValues, compiledPath.value) !== value;
-        applyValidation();
-      },
-    });
-  };
-
-  const useFieldTouch: FormContext<T>['useFieldTouch'] = (path) => (flag?: boolean | FocusEvent) => {
-    fields.get(path)!.touched = flag instanceof FocusEvent ? true : (flag ?? true);
-  };
-
-  const useFieldError: FormContext<T>['useFieldError'] = (path) => computed<string>(() => {
-    const meta = fields.get(path);
-    if (meta === undefined) {
-      return '';
-    }
-
-    if (meta.touched) {
-      return meta.error;
-    }
-    return '';
-  });
-
-  const useField: FormContext<T>['useField'] = (path) => [
-    useFieldValue(path),
-    useFieldTouch(path),
-    useFieldError(path),
-  ];
-
-  const useArrayFieldValue: FormContext<T>['useArrayFieldValue'] = (path) => {
-    const compiledPath = toCompiledPath(path);
-    let meta = fields.get(path);
-    if (meta === undefined) {
-      meta = createFieldMeta(false, false, '', 1);
-      fields.set(path, meta);
-    } else {
-      meta.refCount += 1;
-    }
-
-    return computed({
-      get: () => get(currentValues.value, compiledPath) ?? [],
-      set(value) {
-        if (!Array.isArray(value)) {
-          throw new Error(`Array expected, got ${typeof value}`);
-        }
-        set(currentValues.value, compiledPath, value);
-
-        meta.dirty = get(initialValues, compiledPath) !== value;
-        applyValidation();
-      },
-    });
-  };
-
-  const useArrayField: FormContext<T>['useArrayField'] = (path) => [useArrayFieldValue(path)];
-
   const dirty: FormContext<T>['dirty'] = computed<boolean>(() => {
     for (const [, meta] of fields) {
       if (meta.dirty === true) {
@@ -271,19 +166,26 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     __meta: fields,
     reset,
     resetField,
-    setValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path, value: Value) {
-      set(currentValues.value, toCompiledPath(path), value);
+    setValue<Path extends Paths<T>, Value extends Get<T, Path>>(
+      path: Path | CompiledPath,
+      value: Value,
+    ) {
+      const compiledPath = Array.isArray(path) ? path : toCompiledPath(path);
+      const stringPath = typeof path === 'string' ? path : compiledPath.join('.');
 
-      const meta = fields.get(path);
+      set(currentValues.value, compiledPath, cloneFn(value));
+
+      const meta = fields.get(stringPath);
       if (meta) {
-        meta.dirty = get(initialValues, toCompiledPath(path)) !== value;
+        meta.dirty = get(initialValues, compiledPath)
+          !== value;
       } else {
-        fields.set(path, createFieldMeta(false, true, '', 0));
+        fields.set(stringPath, createFieldMeta(false, true, '', 0));
       }
       applyValidation();
     },
-    getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path): Value {
-      return get(currentValues.value, toCompiledPath(path));
+    getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value {
+      return get(currentValues.value, Array.isArray(path) ? path : toCompiledPath(path));
     },
     setTouched<Path extends Paths<T>>(path: Path, flag = true) {
       fields.get(path)!.touched = flag;
@@ -297,24 +199,17 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
         return;
       }
 
-      onSubmit(cloner(toRaw(currentValues.value)));
+      // TODO: properly coerce/transform validation result
+      onSubmit(cloneFn(currentValues.value));
     },
-    isFieldDirty<Path extends Paths<T>>(path: Path): boolean {
+    isDirty<Path extends Paths<T>>(path: Path): boolean {
       return fields.get(path)?.dirty ?? false;
     },
-    isFieldTouched<Path extends Paths<T>>(path: Path): boolean {
+    isTouched<Path extends Paths<T>>(path: Path): boolean {
       return fields.get(path)?.touched ?? false;
     },
-    isFieldInvalid<Path extends Paths<T>>(path: Path): boolean {
-      return (fields.get(path)?.error ?? '') !== '';
+    getError<Path extends Paths<T>>(path: Path): string | null {
+      return fields.get(path)?.error ?? null;
     },
-
-    // composables
-    useField,
-    useFieldValue,
-    useFieldTouch,
-    useFieldError,
-    useArrayFieldValue,
-    useArrayField,
   };
 }

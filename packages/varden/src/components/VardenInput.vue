@@ -1,6 +1,7 @@
 <script lang="ts" setup generic="T, Path extends Paths<T>">
 import type { Paths } from '../path';
 import type { FormContext } from '../lib';
+import { useField } from '../composables';
 
 const props = defineProps<{
   form: FormContext<T>;
@@ -11,7 +12,7 @@ const [
   model,
   onBlur,
   error,
-] = props.form.useField(props.path);
+] = useField(props.form, props.path);
 
 function onInput(event: Event) {
   const target = event.target as HTMLInputElement | null;

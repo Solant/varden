@@ -3,6 +3,7 @@ import { computed, toRaw } from 'vue';
 
 import type { Paths, Get } from '../path';
 import type { FormContext } from '../lib';
+import { useField } from '../composables';
 
 const props = defineProps<{
   form: FormContext<T>;
@@ -14,7 +15,7 @@ const [
   model,
   onBlur,
   error,
-] = props.form.useField(props.path);
+] = useField(props.form, props.path);
 
 function update(event: Event) {
   const target = event.target as HTMLInputElement | null;
