@@ -34,6 +34,11 @@ describe('path utilities', () => {
     expect(get({ foo: { bar: '' } }, toCompiledPath('foo.bar'), 'TEST')).toBe('');
   });
 
+  it('path is longer than object', () => {
+    expect(get({ foo: undefined }, toCompiledPath('foo.bar.baz'), 'TEST')).toBe('TEST');
+    expect(get({ foo: undefined }, toCompiledPath('foo.bar'))).toBe(undefined);
+  });
+
   it('should delete value by path', () => {
     const value = { foo: { bar: 2, baz: 3 } };
     del(value, toCompiledPath('foo.bar'));
