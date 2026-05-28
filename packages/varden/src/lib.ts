@@ -35,7 +35,7 @@ export interface FormContext<T> {
   resetField<Path extends Paths<T>>(path: Path): void;
   setValue<Path extends Paths<T>, Value extends Get<T, Path>>(
     path: Path | CompiledPath,
-    value: Value,
+    value: Value | undefined,
   ): void;
   getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
@@ -185,7 +185,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     resetField,
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(
       path: Path | CompiledPath,
-      value: Value,
+      value: Value | undefined,
     ) {
       const compiledPath = Array.isArray(path) ? path : toCompiledPath(path);
       const stringPath = typeof path === 'string' ? path : compiledPath.join('.');
@@ -199,6 +199,20 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       } else {
         fields.set(stringPath, createFieldMeta(false, isDirty, '', 0));
       }
+
+      // cleanup child fields
+      for (const [nestedPath, nestedMeta] of fields) {
+        if (nestedPath.startsWith(`${path}.`)) {
+          if (nestedMeta !== undefined) {
+            if (nestedMeta.refCount === 0) {
+              fields.delete(nestedPath);
+            } else {
+              nestedMeta.dirty = !equalsFn(get(initialValues, toCompiledPath(nestedPath)), value);
+            }
+          }
+        }
+      }
+
       applyValidation();
     },
     getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value {
