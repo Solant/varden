@@ -238,7 +238,12 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       onSubmit(cloneFn(currentValues.value));
     },
     isDirty<Path extends Paths<T>>(path: Path): boolean {
-      return fields.get(path)?.dirty ?? false;
+      for (const [field, meta] of fields) {
+        if (field === path) return meta.dirty;
+        if (field.startsWith(`${path}.`) && meta.dirty === true) return true;
+      }
+
+      return false;
     },
     isTouched<Path extends Paths<T>>(path: Path): boolean {
       return fields.get(path)?.touched ?? false;

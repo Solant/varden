@@ -4,6 +4,8 @@ import * as v from 'valibot';
 import { useForm } from '../src/lib';
 import { useFieldValue } from '../src/composables';
 
+const onSubmit = () => { };
+
 describe('form.setValue plain', () => {
   it('should set the value of a field', () => {
     const form = useForm({
