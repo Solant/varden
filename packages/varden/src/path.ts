@@ -52,7 +52,7 @@ export function get(
 
   // early return for null/undefined objects
   if (!object) return object;
-  return object[path[limit]!];
+  return path[limit]! in object ? object[path[limit]!] : defaultValue;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -17,6 +17,28 @@ describe('form.setValue plain', () => {
     expect(form.values.value.name).toBe('foo');
     expect(form.isDirty('name')).toBe(true);
   });
+
+  it('should treat undefined and missing field as dirty (shallow)', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ foo: v.string() }),
+    });
+
+    form.setValue('foo', undefined);
+    expect(form.values.value?.foo).toBe(undefined);
+    expect(form.isDirty('foo')).toBe(true);
+  });
+
+  it('should treat undefined and missing field as dirty (deep)', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ foo: v.object({ bar: v.string() }) }),
+    });
+
+    form.setValue('foo.bar', undefined);
+    expect(form.values.value?.foo?.bar).toBe(undefined);
+    expect(form.isDirty('foo.bar')).toBe(true);
+  });
 });
 
 describe('form.setValue object', () => {
@@ -105,5 +127,15 @@ describe('form.setValue object', () => {
 
     expect(form.values.value?.user?.name).toBe('changed');
     expect(form.isDirty('user.name')).toBe(true);
+  });
+
+  it('should treat untracked parent as dirty if child is dirty', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ user: v.object({ name: v.string() }) }),
+    });
+
+    form.setValue('user.name', 'test');
+    expect(form.isDirty('user')).toBe(true);
   });
 });

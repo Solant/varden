@@ -193,7 +193,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       set(currentValues.value, compiledPath, cloneFn(value));
 
       const meta = fields.get(stringPath);
-      const isDirty = !equalsFn(get(initialValues, compiledPath), value);
+      const isDirty = !equalsFn(get(initialValues, compiledPath, Empty), value);
       if (meta) {
         meta.dirty = isDirty;
       } else {
