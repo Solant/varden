@@ -3,6 +3,7 @@ import pluginVue from 'eslint-plugin-vue';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
 import pluginImport from 'eslint-plugin-import-x';
+import pluginPackageJson from 'eslint-plugin-package-json';
 
 export default [
   {
@@ -15,6 +16,7 @@ export default [
 
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
+  pluginPackageJson.configs['recommended-publishable'],
 
   airbnb.configs['flat/recommended'],
   airbnb.configs['flat/addon-iterators'],
