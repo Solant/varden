@@ -2,6 +2,8 @@ allowBuilds:
   esbuild: false
   unrs-resolver: false
 minimumReleaseAge: 4320
+catalog:
+  vue: ^3.5.31
 packages:
   - docs
   - packages/*
