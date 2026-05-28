@@ -202,12 +202,16 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
 
       // cleanup child fields
       for (const [nestedPath, nestedMeta] of fields) {
-        if (nestedPath.startsWith(`${path}.`)) {
+        if (nestedPath.startsWith(`${stringPath}.`)) {
           if (nestedMeta !== undefined) {
             if (nestedMeta.refCount === 0) {
               fields.delete(nestedPath);
             } else {
-              nestedMeta.dirty = !equalsFn(get(initialValues, toCompiledPath(nestedPath)), value);
+              const compiledNestedPath = toCompiledPath(nestedPath);
+              nestedMeta.dirty = !equalsFn(
+                get(initialValues, compiledNestedPath),
+                get(currentValues.value, compiledNestedPath),
+              );
             }
           }
         }

@@ -71,4 +71,37 @@ describe('form.setValue object', () => {
     expect(form.isDirty('user.name')).toBe(false);
     expect(form.isTouched('user.name')).toBe(true);
   });
+
+  it('should mark child as not dirty when parent is set to initial values', () => {
+    const form = useForm({
+      onSubmit: () => { },
+      initial: { user: { name: 'initial' } },
+      schema: v.object({ user: v.object({ name: v.string() }) }),
+    });
+
+    const name = useFieldValue(form, 'user.name');
+    name.value = 'changed';
+    expect(form.isDirty('user.name')).toBe(true);
+
+    form.setValue('user', { name: 'initial' });
+
+    expect(form.values.value?.user?.name).toBe('initial');
+    expect(form.isDirty('user.name')).toBe(false);
+  });
+
+  it('should mark child as dirty when parent is set to different values', () => {
+    const form = useForm({
+      onSubmit: () => { },
+      initial: { user: { name: 'initial' } },
+      schema: v.object({ user: v.object({ name: v.string() }) }),
+    });
+
+    useFieldValue(form, 'user.name');
+    expect(form.isDirty('user.name')).toBe(false);
+
+    form.setValue('user', { name: 'changed' });
+
+    expect(form.values.value?.user?.name).toBe('changed');
+    expect(form.isDirty('user.name')).toBe(true);
+  });
 });
