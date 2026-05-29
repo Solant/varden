@@ -243,7 +243,12 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
         if (field.startsWith(`${path}.`) && meta.dirty === true) return true;
       }
 
-      return false;
+      // TODO: should be tracked after first check?
+      const compiledPath = toCompiledPath(path);
+      return !equalsFn(
+        get(currentValues.value, compiledPath, Empty),
+        get(initialValues, compiledPath, Empty),
+      );
     },
     isTouched<Path extends Paths<T>>(path: Path): boolean {
       return fields.get(path)?.touched ?? false;

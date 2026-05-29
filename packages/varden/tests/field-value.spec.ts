@@ -138,4 +138,14 @@ describe('form.setValue object', () => {
     form.setValue('user.name', 'test');
     expect(form.isDirty('user')).toBe(true);
   });
+
+  it('should treat child as dirty when parent affects child field state', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ user: v.object({ name: v.string() }) }),
+    });
+
+    form.setValue('user', { name: 'Jack' });
+    expect(form.isDirty('user.name')).toBe(true);
+  });
 });
