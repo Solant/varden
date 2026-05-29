@@ -51,7 +51,7 @@ export function get(
   }
 
   // early return for null/undefined objects
-  if (!object) return object;
+  if (!object) return defaultValue;
   return path[limit]! in object ? object[path[limit]!] : defaultValue;
 }
 

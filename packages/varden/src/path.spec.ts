@@ -1,7 +1,7 @@
 import { expect, it, describe } from 'vitest';
 
 import {
-  del, get, isArrayIndex, set, toCompiledPath,
+  del, Empty, get, isArrayIndex, set, toCompiledPath,
 } from './path';
 
 describe('path utilities', () => {
@@ -73,5 +73,10 @@ describe('path utilities', () => {
     set(test, toCompiledPath('foo.bar.0.baz'), 4);
     // @ts-expect-error test case
     expect(test.foo.bar[0].baz).toBe(4);
+  });
+
+  it('should return Empty for nested path under undefined field', () => {
+    const test = { user: undefined };
+    expect(get(test, toCompiledPath('user.name'), Empty)).toBe(Empty);
   });
 });
