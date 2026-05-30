@@ -16,6 +16,7 @@ import {
   isEmptyObject,
   type CompiledPath,
   type ArrayPaths,
+  type GetArray,
 } from './path';
 import { createFieldMeta, type FieldMeta } from './field-metadata';
 
@@ -274,31 +275,33 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       return fields.get(path)?.error ?? null;
     },
     // arrays
-    pop<Path extends ArrayPaths<T>>(path: Path): undefined | Get<T, Path> {
+    pop<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path> {
       const compiledPath = toCompiledPath(path);
       const value = get(currentValues.value, compiledPath);
       return Array.isArray(value) ? value.pop() : undefined;
     },
-    shift<Path extends ArrayPaths<T>>(path: Path): undefined | Get<T, Path> {
+    shift<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path> {
       const compiledPath = toCompiledPath(path);
       const value = get(currentValues.value, compiledPath);
       return Array.isArray(value) ? value.shift() : undefined;
     },
-    push<Path extends ArrayPaths<T>>(path: Path, value: Get<T, Path>): void {
+    push<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void {
       const compiledPath = toCompiledPath(path);
       const arr = get(currentValues.value, compiledPath);
       if (Array.isArray(arr)) {
         arr.push(cloneFn(value));
       } else {
+        // @ts-expect-error GetArray/Get conversion
         setValue(path, [cloneFn(value)]);
       }
     },
-    unshift<Path extends ArrayPaths<T>>(path: Path, value: Get<T, Path>): void {
+    unshift<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void {
       const compiledPath = toCompiledPath(path);
       const arr = get(currentValues.value, compiledPath);
       if (Array.isArray(arr)) {
         arr.unshift(cloneFn(value));
       } else {
+        // @ts-expect-error GetArray/Get conversion
         setValue(path, [cloneFn(value)]);
       }
     },
@@ -306,13 +309,14 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       path: Path,
       index?: number,
       deleteCount?: number,
-      ...items: Get<T, Path>[]
+      ...items: GetArray<T, Path>[]
     ): void {
       const compiledPath = toCompiledPath(path);
       const arr = get(currentValues.value, compiledPath);
       if (Array.isArray(arr)) {
         arr.splice(index ?? 0, deleteCount ?? 0, ...(items ?? []).map(cloneFn));
       } else if (Array.isArray(items)) {
+        // @ts-expect-error GetArray/Get conversion
         setValue(path, items.map(cloneFn));
       }
     },
