@@ -1,7 +1,7 @@
 import { expect, it, describe } from 'vitest';
 
 import {
-  del, get, isArrayIndex, set, toCompiledPath,
+  del, Empty, get, isArrayIndex, set, toCompiledPath,
 } from './path';
 
 describe('path utilities', () => {
@@ -32,6 +32,11 @@ describe('path utilities', () => {
     expect(get({ foo: { bar: undefined } }, toCompiledPath('foo.bar'), 'TEST')).toBe(undefined);
     expect(get({ foo: { bar: 0 } }, toCompiledPath('foo.bar'), 'TEST')).toBe(0);
     expect(get({ foo: { bar: '' } }, toCompiledPath('foo.bar'), 'TEST')).toBe('');
+  });
+
+  it('path is longer than object', () => {
+    expect(get({ foo: undefined }, toCompiledPath('foo.bar.baz'), 'TEST')).toBe('TEST');
+    expect(get({ foo: undefined }, toCompiledPath('foo.bar'))).toBe(undefined);
   });
 
   it('should delete value by path', () => {
@@ -68,5 +73,10 @@ describe('path utilities', () => {
     set(test, toCompiledPath('foo.bar.0.baz'), 4);
     // @ts-expect-error test case
     expect(test.foo.bar[0].baz).toBe(4);
+  });
+
+  it('should return Empty for nested path under undefined field', () => {
+    const test = { user: undefined };
+    expect(get(test, toCompiledPath('user.name'), Empty)).toBe(Empty);
   });
 });

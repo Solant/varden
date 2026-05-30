@@ -45,11 +45,14 @@ export function get(
     if (typeof object === 'object' && object !== null && path[i]! in object) {
       object = object[path[i]!];
     } else {
-      return object[path[i]!] ?? defaultValue;
+      // target path is longer than the object, return defaultValue
+      return object?.[path[i]!] ?? defaultValue;
     }
   }
 
-  return object[path[limit]!];
+  // early return for null/undefined objects
+  if (!object) return defaultValue;
+  return path[limit]! in object ? object[path[limit]!] : defaultValue;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -6,6 +6,7 @@ import {
   type ComputedRef,
   type Ref,
   type DeepReadonly,
+  toRaw,
 } from 'vue';
 
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
@@ -35,7 +36,7 @@ export interface FormContext<T> {
   resetField<Path extends Paths<T>>(path: Path): void;
   setValue<Path extends Paths<T>, Value extends Get<T, Path>>(
     path: Path | CompiledPath,
-    value: Value,
+    value: Value | undefined,
   ): void;
   getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
@@ -50,8 +51,13 @@ export interface _FormContext<T> extends FormContext<T> {
   __meta: Map<Paths<T>, FieldMeta>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function strictEqualsFn(a: any, b: any): boolean {
+  return a === b;
+}
+
 // eslint-disable-next-line no-underscore-dangle
-let _equalsFn: FormProps<unknown>['equalsFn'] & {} = (a, b) => a === b;
+let _equalsFn: FormProps<unknown>['equalsFn'] & {} = strictEqualsFn;
 // eslint-disable-next-line no-underscore-dangle
 let _cloneFn: FormProps<unknown>['cloneFn'] & {} = structuredClone;
 
@@ -61,7 +67,7 @@ export function defineVardenConfig(config: { equalsFn?: FormProps<unknown>['equa
 }
 
 export function resetVardenConfig() {
-  _equalsFn = (a, b) => a === b;
+  _equalsFn = strictEqualsFn;
   _cloneFn = structuredClone;
 }
 
@@ -185,7 +191,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     resetField,
     setValue<Path extends Paths<T>, Value extends Get<T, Path>>(
       path: Path | CompiledPath,
-      value: Value,
+      value: Value | undefined,
     ) {
       const compiledPath = Array.isArray(path) ? path : toCompiledPath(path);
       const stringPath = typeof path === 'string' ? path : compiledPath.join('.');
@@ -193,16 +199,35 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       set(currentValues.value, compiledPath, cloneFn(value));
 
       const meta = fields.get(stringPath);
-      const isDirty = !equalsFn(get(initialValues, compiledPath), value);
+      const isDirty = !equalsFn(get(initialValues, compiledPath, Empty), value);
       if (meta) {
         meta.dirty = isDirty;
       } else {
         fields.set(stringPath, createFieldMeta(false, isDirty, '', 0));
       }
+
+      // cleanup child fields
+      for (const [nestedPath, nestedMeta] of fields) {
+        if (nestedPath.startsWith(`${stringPath}.`)) {
+          if (nestedMeta !== undefined) {
+            if (nestedMeta.refCount === 0) {
+              fields.delete(nestedPath);
+            } else {
+              const compiledNestedPath = toCompiledPath(nestedPath);
+              nestedMeta.dirty = !equalsFn(
+                get(initialValues, compiledNestedPath),
+                get(currentValues.value, compiledNestedPath),
+              );
+            }
+          }
+        }
+      }
+
       applyValidation();
     },
     getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value {
-      return get(currentValues.value, Array.isArray(path) ? path : toCompiledPath(path));
+      const a = get(currentValues.value, Array.isArray(path) ? path : toCompiledPath(path));
+      return cloneFn(toRaw(a));
     },
     setTouched<Path extends Paths<T>>(path: Path, flag = true) {
       fields.get(path)!.touched = flag;
@@ -220,7 +245,27 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       onSubmit(cloneFn(currentValues.value));
     },
     isDirty<Path extends Paths<T>>(path: Path): boolean {
-      return fields.get(path)?.dirty ?? false;
+      // TODO: consider shipping dequal for deep equality
+      // this case is only possible if equalsFn is not strict equality
+      if (equalsFn !== strictEqualsFn) {
+        const compiledPath = toCompiledPath(path);
+        return !equalsFn(
+          get(currentValues.value, compiledPath, Empty),
+          get(initialValues, compiledPath, Empty),
+        );
+      }
+
+      for (const [field, meta] of fields) {
+        if (field === path) return meta.dirty;
+        if (field.startsWith(`${path}.`) && meta.dirty === true) return true;
+      }
+
+      // TODO: should be tracked after first check?
+      const compiledPath = toCompiledPath(path);
+      return !equalsFn(
+        get(currentValues.value, compiledPath, Empty),
+        get(initialValues, compiledPath, Empty),
+      );
     },
     isTouched<Path extends Paths<T>>(path: Path): boolean {
       return fields.get(path)?.touched ?? false;
