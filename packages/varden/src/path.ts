@@ -1,5 +1,5 @@
 export type Paths<T> = T extends Array<infer U>
-  ? `${number}.${Paths<U>}`
+  ? (U extends object ? never : `${number}`) | `${number}.${Paths<U>}`
   : T extends object
     ? {
       [K in keyof T & (string | number)]: K extends string ? `${K}` | `${K}.${Paths<T[K]>}` : never;
@@ -22,7 +22,11 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
   ? K extends keyof T
     ? R extends Paths<T[K]>
       ? Get<T[K], R>
-      : never
+      : T[K] extends Array<infer U>
+        ? R extends `${number}`
+          ? U
+          : never
+        : never
     : T extends Array<infer U>
       ? K extends `${number}`
         ? Get<U, R extends Paths<U> ? R : never>
@@ -30,7 +34,11 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
       : never
   : P extends keyof T
     ? T[P]
-    : never;
+    : T extends Array<infer U>
+      ? P extends `${number}`
+        ? U
+        : never
+      : never;
 
 type _GetArray<T, P extends ArrayPaths<T>> = P extends `${infer K}.${infer R}`
   ? K extends keyof T
