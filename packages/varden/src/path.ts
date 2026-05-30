@@ -28,8 +28,7 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
     ? T[P]
     : never;
 
-// Specialized Get for ArrayPaths as a workaround for tsc stack overflow error
-export type GetArray<T, P extends ArrayPaths<T>> = P extends `${infer K}.${infer R}`
+type _GetArray<T, P extends ArrayPaths<T>> = P extends `${infer K}.${infer R}`
   ? K extends keyof T
     ? R extends Paths<T[K]>
       ? Get<T[K], R>
@@ -38,6 +37,11 @@ export type GetArray<T, P extends ArrayPaths<T>> = P extends `${infer K}.${infer
   : P extends keyof T
     ? T[P]
     : never;
+
+// Specialized Get for ArrayPaths as a workaround for tsc stack overflow error
+export type GetArray<T, P extends ArrayPaths<T>> = _GetArray<T, P> extends Array<infer R>
+  ? R
+  : never;
 
 export type CompiledPath = Array<string | number>;
 

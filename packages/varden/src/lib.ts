@@ -47,6 +47,16 @@ export interface FormContext<T> {
   isDirty<Path extends Paths<T>>(path: Path): boolean;
   getError<Path extends Paths<T>>(path: Path): string | null;
   submit(): void;
+  pop<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path>;
+  shift<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path>;
+  push<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void;
+  unshift<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void;
+  splice<Path extends ArrayPaths<T>>(
+    path: Path,
+    index?: number,
+    deleteCount?: number,
+    ...items: GetArray<T, Path>[]
+  ): void;
 }
 
 export interface _FormContext<T> extends FormContext<T> {

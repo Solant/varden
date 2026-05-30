@@ -174,3 +174,26 @@ describe('form.setValue object', () => {
     expect(form.values.value.user?.name).toBe('initial');
   });
 });
+
+describe('form arrays', () => {
+  it('should push into existing array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', []);
+    form.push('users', { name: 'test' });
+    expect(form.values.value.users).toEqual([{ name: 'test' }]);
+  });
+
+  it('should create a new array if none exists', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.push('users', { name: 'test' });
+    expect(form.values.value.users).toEqual([{ name: 'test' }]);
+  });
+});
