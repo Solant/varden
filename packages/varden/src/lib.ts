@@ -324,10 +324,10 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       const compiledPath = toCompiledPath(path);
       const arr = get(currentValues.value, compiledPath);
       if (Array.isArray(arr)) {
-        arr.splice(index ?? 0, deleteCount ?? 0, ...(items ?? []).map(cloneFn));
+        arr.splice(index ?? 0, deleteCount ?? 0, ...(items ?? []).map(v => cloneFn(v)));
       } else if (Array.isArray(items)) {
         // @ts-expect-error GetArray/Get conversion
-        setValue(path, items.map(cloneFn));
+        setValue(path, items.map(v => cloneFn(v)));
       }
     },
   };

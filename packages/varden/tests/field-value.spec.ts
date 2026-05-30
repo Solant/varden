@@ -196,4 +196,147 @@ describe('form arrays', () => {
     form.push('users', { name: 'test' });
     expect(form.values.value.users).toEqual([{ name: 'test' }]);
   });
+
+  it('should pop from existing array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', [{ name: 'a' }, { name: 'b' }]);
+    const popped = form.pop('users');
+    expect(popped).toEqual({ name: 'b' });
+    expect(form.values.value.users).toEqual([{ name: 'a' }]);
+  });
+
+  it('should return undefined when popping from empty array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', []);
+    const popped = form.pop('users');
+    expect(popped).toBeUndefined();
+    expect(form.values.value.users).toEqual([]);
+  });
+
+  it('should return undefined when popping from non-existent array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    const popped = form.pop('users');
+    expect(popped).toBeUndefined();
+  });
+
+  it('should shift from existing array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', [{ name: 'a' }, { name: 'b' }]);
+    const shifted = form.shift('users');
+    expect(shifted).toEqual({ name: 'a' });
+    expect(form.values.value.users).toEqual([{ name: 'b' }]);
+  });
+
+  it('should return undefined when shifting from empty array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', []);
+    const shifted = form.shift('users');
+    expect(shifted).toBeUndefined();
+    expect(form.values.value.users).toEqual([]);
+  });
+
+  it('should return undefined when shifting from non-existent array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    const shifted = form.shift('users');
+    expect(shifted).toBeUndefined();
+  });
+
+  it('should unshift into existing array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', [{ name: 'a' }]);
+    form.unshift('users', { name: 'b' });
+    expect(form.values.value.users).toEqual([{ name: 'b' }, { name: 'a' }]);
+  });
+
+  it('should create a new array when unshifting into non-existent array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.unshift('users', { name: 'test' });
+    expect(form.values.value.users).toEqual([{ name: 'test' }]);
+  });
+
+  it('should splice to insert items at index', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', [{ name: 'a' }, { name: 'c' }]);
+    form.splice('users', 1, 0, { name: 'b' });
+    expect(form.values.value.users).toEqual([{ name: 'a' }, { name: 'b' }, { name: 'c' }]);
+  });
+
+  it('should splice to remove items at index', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', [{ name: 'a' }, { name: 'b' }, { name: 'c' }]);
+    form.splice('users', 1, 1);
+    expect(form.values.value.users).toEqual([{ name: 'a' }, { name: 'c' }]);
+  });
+
+  it('should splice to replace items at index', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', [{ name: 'a' }, { name: 'b' }, { name: 'c' }]);
+    form.splice('users', 1, 1, { name: 'x' });
+    expect(form.values.value.users).toEqual([{ name: 'a' }, { name: 'x' }, { name: 'c' }]);
+  });
+
+  it('should create a new array when splicing into non-existent array', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.splice('users', 0, 0, { name: 'a' }, { name: 'b' });
+    expect(form.values.value.users).toEqual([{ name: 'a' }, { name: 'b' }]);
+  });
+
+  it('should use defaults when splice is called without index or deleteCount', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+    });
+
+    form.setValue('users', [{ name: 'a' }]);
+    form.splice('users');
+    expect(form.values.value.users).toEqual([{ name: 'a' }]);
+  });
 });
