@@ -294,7 +294,11 @@ describe('form arrays', () => {
 
     form.setValue('users', [{ name: 'a' }, { name: 'c' }]);
     form.splice('users', 1, 0, { name: 'b' });
-    expect(form.values.value.users).toEqual([{ name: 'a' }, { name: 'b' }, { name: 'c' }]);
+    expect(form.values.value.users).toEqual([
+      { name: 'a' },
+      { name: 'b' },
+      { name: 'c' },
+    ]);
   });
 
   it('should splice to remove items at index', () => {
@@ -303,7 +307,11 @@ describe('form arrays', () => {
       schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
     });
 
-    form.setValue('users', [{ name: 'a' }, { name: 'b' }, { name: 'c' }]);
+    form.setValue('users', [
+      { name: 'a' },
+      { name: 'b' },
+      { name: 'c' },
+    ]);
     form.splice('users', 1, 1);
     expect(form.values.value.users).toEqual([{ name: 'a' }, { name: 'c' }]);
   });
@@ -314,9 +322,17 @@ describe('form arrays', () => {
       schema: v.object({ users: v.array(v.object({ name: v.string() })) }),
     });
 
-    form.setValue('users', [{ name: 'a' }, { name: 'b' }, { name: 'c' }]);
+    form.setValue('users', [
+      { name: 'a' },
+      { name: 'b' },
+      { name: 'c' },
+    ]);
     form.splice('users', 1, 1, { name: 'x' });
-    expect(form.values.value.users).toEqual([{ name: 'a' }, { name: 'x' }, { name: 'c' }]);
+    expect(form.values.value.users).toEqual([
+      { name: 'a' },
+      { name: 'x' },
+      { name: 'c' },
+    ]);
   });
 
   it('should create a new array when splicing into non-existent array', () => {
