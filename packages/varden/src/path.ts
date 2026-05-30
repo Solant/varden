@@ -23,7 +23,11 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
     ? R extends Paths<T[K]>
       ? Get<T[K], R>
       : never
-    : never
+    : T extends Array<infer U>
+      ? K extends `${number}`
+        ? Get<U, R extends Paths<U> ? R : never>
+        : never
+      : never
   : P extends keyof T
     ? T[P]
     : never;
