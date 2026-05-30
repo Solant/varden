@@ -50,8 +50,13 @@ export interface _FormContext<T> extends FormContext<T> {
   __meta: Map<Paths<T>, FieldMeta>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function strictEqualsFn(a: any, b: any): boolean {
+  return a === b;
+}
+
 // eslint-disable-next-line no-underscore-dangle
-let _equalsFn: FormProps<unknown>['equalsFn'] & {} = (a, b) => a === b;
+let _equalsFn: FormProps<unknown>['equalsFn'] & {} = strictEqualsFn;
 // eslint-disable-next-line no-underscore-dangle
 let _cloneFn: FormProps<unknown>['cloneFn'] & {} = structuredClone;
 
@@ -61,7 +66,7 @@ export function defineVardenConfig(config: { equalsFn?: FormProps<unknown>['equa
 }
 
 export function resetVardenConfig() {
-  _equalsFn = (a, b) => a === b;
+  _equalsFn = strictEqualsFn;
   _cloneFn = structuredClone;
 }
 
@@ -238,6 +243,16 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       onSubmit(cloneFn(currentValues.value));
     },
     isDirty<Path extends Paths<T>>(path: Path): boolean {
+      // TODO: consider shipping dequal for deep equality
+      // this case is only possible if equalsFn is not strict equality
+      if (equalsFn !== strictEqualsFn) {
+        const compiledPath = toCompiledPath(path);
+        return !equalsFn(
+          get(currentValues.value, compiledPath, Empty),
+          get(initialValues, compiledPath, Empty),
+        );
+      }
+
       for (const [field, meta] of fields) {
         if (field === path) return meta.dirty;
         if (field.startsWith(`${path}.`) && meta.dirty === true) return true;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as v from 'valibot';
+import { dequal } from 'dequal';
 
 import { useForm } from '../src/lib';
 import { useFieldValue } from '../src/composables';
@@ -147,5 +148,18 @@ describe('form.setValue object', () => {
 
     form.setValue('user', { name: 'Jack' });
     expect(form.isDirty('user.name')).toBe(true);
+  });
+
+  it('should mark parent dirty if child is changed back to original value', () => {
+    const form = useForm({
+      onSubmit,
+      initial: { user: { name: 'initial' } },
+      equalsFn: dequal,
+      schema: v.object({ user: v.object({ name: v.string() }) }),
+    });
+
+    form.setValue('user', { name: 'changed' });
+    form.setValue('user.name', 'initial');
+    expect(form.isDirty('user')).toBe(false);
   });
 });
