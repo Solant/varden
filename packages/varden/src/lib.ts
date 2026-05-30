@@ -6,6 +6,7 @@ import {
   type ComputedRef,
   type Ref,
   type DeepReadonly,
+  toRaw,
 } from 'vue';
 
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
@@ -225,7 +226,8 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
       applyValidation();
     },
     getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value {
-      return get(currentValues.value, Array.isArray(path) ? path : toCompiledPath(path));
+      const a = get(currentValues.value, Array.isArray(path) ? path : toCompiledPath(path));
+      return cloneFn(toRaw(a));
     },
     setTouched<Path extends Paths<T>>(path: Path, flag = true) {
       fields.get(path)!.touched = flag;

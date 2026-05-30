@@ -162,4 +162,15 @@ describe('form.setValue object', () => {
     form.setValue('user.name', 'initial');
     expect(form.isDirty('user')).toBe(false);
   });
+
+  it('should return a safe copy of the value', () => {
+    const form = useForm({
+      onSubmit,
+      schema: v.object({ user: v.object({ name: v.string() }) }),
+    });
+    form.setValue('user', { name: 'initial' });
+    const a = form.getValue('user');
+    a.name = 'changed';
+    expect(form.values.value.user?.name).toBe('initial');
+  });
 });
