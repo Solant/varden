@@ -1,16 +1,14 @@
-import { describe, bench } from 'vitest';
-import { effectScope } from 'vue';
+import { describe, bench, afterAll } from 'vitest';
+import { effectScope, type EffectScope } from 'vue';
 import { useForm } from 'varden';
 import { useForm as useVV4Form } from 'vee-validate4';
 import { useForm as useVV5Form } from 'vee-validate5';
 import { toTypedSchema } from '@vee-validate/valibot';
 import {
   logInSchema,
-  // signUpSchema
 } from './schemas';
 
 const logInVvSchema = toTypedSchema(logInSchema);
-// const signUpVvSchema = toTypedSchema(signUpSchema);
 
 const username = 'johndoe@example.com';
 const userNameInput: Array<string> = [];
@@ -24,46 +22,58 @@ for (let i = 1; i < password.length; i++) {
   passwordInput.push(password[i].substring(0, i));
 }
 
+console.warn = () => {};
+
 describe('setValue — logInSchema', () => {
+  const warn = console.warn;
+  console.warn = () => {};
+
+  const vardenScope: EffectScope = effectScope();
+  const vardenForm = vardenScope.run(() =>
+    useForm({ schema: logInSchema, onSubmit() {} }),
+  )!;
+
+  const vv4Scope: EffectScope = effectScope();
+  const vv4Ctx = vv4Scope.run(() =>
+    useVV4Form({ validationSchema: logInVvSchema }),
+  )!;
+
+  const vv5Scope: EffectScope = effectScope();
+  const vv5Ctx = vv5Scope.run(() =>
+    useVV5Form({ validationSchema: logInSchema }),
+  )!;
+
+  afterAll(() => {
+    vardenScope.stop();
+    vv4Scope.stop();
+    vv5Scope.stop();
+    console.warn = warn;
+  });
+
   bench('varden', () => {
-    const scope = effectScope();
-    const form = scope.run(() =>
-      useForm({ schema: logInSchema, onSubmit() {} }),
-    )!;
     for (const v of userNameInput) {
-      form.setValue(['username'], v);
+      vardenForm.setValue(['username'], v);
     }
     for (const v of passwordInput) {
-      form.setValue(['password'], v);
+      vardenForm.setValue(['password'], v);
     }
-    scope.stop();
   });
 
   bench('vee-validate@4', () => {
-    const scope = effectScope();
-    const ctx = scope.run(() =>
-      useVV4Form({ validationSchema: logInVvSchema }),
-    )!;
     for (const v of userNameInput) {
-      ctx.setFieldValue('username', v);
+      vv4Ctx.setFieldValue('username', v);
     }
     for (const v of passwordInput) {
-      ctx.setFieldValue('password', v);
+      vv4Ctx.setFieldValue('password', v);
     }
-    scope.stop();
   });
 
   bench('vee-validate@5', () => {
-    const scope = effectScope();
-    const ctx = scope.run(() =>
-      useVV5Form({ validationSchema: logInSchema }),
-    )!;
     for (const v of userNameInput) {
-      ctx.setFieldValue('username', v);
+      vv5Ctx.setFieldValue('username', v);
     }
     for (const v of passwordInput) {
-      ctx.setFieldValue('password', v);
+      vv5Ctx.setFieldValue('password', v);
     }
-    scope.stop();
   });
 });
