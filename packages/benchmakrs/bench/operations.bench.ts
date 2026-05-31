@@ -10,21 +10,19 @@ import {
 
 const logInVvSchema = toTypedSchema(logInSchema);
 
-const username = 'johndoe@example.com';
-const userNameInput: Array<string> = [];
-for (let i = 1; i < username.length; i++) {
-  userNameInput.push(username[i].substring(0, i));
-}
-
-const password = 'password123';
-const passwordInput: Array<string> = [];
-for (let i = 1; i < password.length; i++) {
-  passwordInput.push(password[i].substring(0, i));
-}
-
-console.warn = () => {};
-
 describe('setValue — logInSchema', () => {
+  const username = 'johndoe@example.com';
+  const userNameInput: Array<string> = [];
+  for (let i = 1; i < username.length; i++) {
+    userNameInput.push(username[i].substring(0, i));
+  }
+
+  const password = 'password123';
+  const passwordInput: Array<string> = [];
+  for (let i = 1; i < password.length; i++) {
+    passwordInput.push(password[i].substring(0, i));
+  }
+
   const warn = console.warn;
   console.warn = () => {};
 
