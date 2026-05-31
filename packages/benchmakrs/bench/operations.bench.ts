@@ -4,6 +4,7 @@ import { useForm } from 'varden';
 import { useForm as useVV4Form } from 'vee-validate4';
 import { useForm as useVV5Form } from 'vee-validate5';
 import { toTypedSchema } from '@vee-validate/valibot';
+
 import {
   logInSchema,
 } from './schemas';
@@ -13,38 +14,34 @@ const logInVvSchema = toTypedSchema(logInSchema);
 describe('setValue — logInSchema', () => {
   const username = 'johndoe@example.com';
   const userNameInput: Array<string> = [];
-  for (let i = 1; i < username.length; i++) {
+  for (let i = 1; i < username.length; i += 1) {
     userNameInput.push(username[i].substring(0, i));
   }
 
   const password = 'password123';
   const passwordInput: Array<string> = [];
-  for (let i = 1; i < password.length; i++) {
+  for (let i = 1; i < password.length; i += 1) {
     passwordInput.push(password[i].substring(0, i));
   }
 
-  const warn = console.warn;
+  const { warn } = console;
+  // eslint-disable-next-line no-console
   console.warn = () => {};
 
   const vardenScope: EffectScope = effectScope();
-  const vardenForm = vardenScope.run(() =>
-    useForm({ schema: logInSchema, onSubmit() {} }),
-  )!;
+  const vardenForm = vardenScope.run(() => useForm({ schema: logInSchema, onSubmit() {} }))!;
 
   const vv4Scope: EffectScope = effectScope();
-  const vv4Ctx = vv4Scope.run(() =>
-    useVV4Form({ validationSchema: logInVvSchema }),
-  )!;
+  const vv4Ctx = vv4Scope.run(() => useVV4Form({ validationSchema: logInVvSchema }))!;
 
   const vv5Scope: EffectScope = effectScope();
-  const vv5Ctx = vv5Scope.run(() =>
-    useVV5Form({ validationSchema: logInSchema }),
-  )!;
+  const vv5Ctx = vv5Scope.run(() => useVV5Form({ validationSchema: logInSchema }))!;
 
   afterAll(() => {
     vardenScope.stop();
     vv4Scope.stop();
     vv5Scope.stop();
+    // eslint-disable-next-line no-console
     console.warn = warn;
   });
 

@@ -4,9 +4,10 @@ import { useForm } from 'varden';
 import { useForm as useVV4Form } from 'vee-validate4';
 import { useForm as useVV5Form } from 'vee-validate5';
 import { toTypedSchema } from '@vee-validate/valibot';
+
 import {
   logInSchema,
-  signUpSchema
+  signUpSchema,
 } from './schemas';
 
 const logInVv4Schema = toTypedSchema(logInSchema);
