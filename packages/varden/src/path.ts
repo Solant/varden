@@ -1,12 +1,46 @@
 export type Paths<T> = T extends Array<infer U>
-  ? `${Paths<U>}`
+  ? (U extends object ? never : `${number}`) | `${number}.${Paths<U>}`
   : T extends object
     ? {
       [K in keyof T & (string | number)]: K extends string ? `${K}` | `${K}.${Paths<T[K]>}` : never;
     }[keyof T & (string | number)]
     : never;
 
+export type ArrayPaths<T> = T extends Array<infer U>
+  ? (U extends Array<unknown> ? `${number}` : never) | `${number}.${ArrayPaths<U>}`
+  : T extends object
+    ? {
+      [K in keyof T & (string | number)]: K extends string
+        ? T[K] extends Array<unknown>
+          ? `${K}` | `${K}.${ArrayPaths<T[K]>}`
+          : `${K}.${ArrayPaths<T[K]>}`
+        : never;
+    }[keyof T & (string | number)]
+    : never;
+
 export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
+  ? K extends keyof T
+    ? R extends Paths<T[K]>
+      ? Get<T[K], R>
+      : T[K] extends Array<infer U>
+        ? R extends `${number}`
+          ? U
+          : never
+        : never
+    : T extends Array<infer U>
+      ? K extends `${number}`
+        ? Get<U, R extends Paths<U> ? R : never>
+        : never
+      : never
+  : P extends keyof T
+    ? T[P]
+    : T extends Array<infer U>
+      ? P extends `${number}`
+        ? U
+        : never
+      : never;
+
+type _GetArray<T, P extends ArrayPaths<T>> = P extends `${infer K}.${infer R}`
   ? K extends keyof T
     ? R extends Paths<T[K]>
       ? Get<T[K], R>
@@ -15,6 +49,11 @@ export type Get<T, P extends Paths<T>> = P extends `${infer K}.${infer R}`
   : P extends keyof T
     ? T[P]
     : never;
+
+// Specialized Get for ArrayPaths as a workaround for tsc stack overflow error
+export type GetArray<T, P extends ArrayPaths<T>> = _GetArray<T, P> extends Array<infer R>
+  ? R
+  : never;
 
 export type CompiledPath = Array<string | number>;
 

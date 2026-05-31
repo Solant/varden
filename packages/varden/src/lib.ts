@@ -15,6 +15,8 @@ import {
   Empty,
   isEmptyObject,
   type CompiledPath,
+  type ArrayPaths,
+  type GetArray,
 } from './path';
 import { createFieldMeta, type FieldMeta } from './field-metadata';
 
@@ -45,6 +47,16 @@ export interface FormContext<T> {
   isDirty<Path extends Paths<T>>(path: Path): boolean;
   getError<Path extends Paths<T>>(path: Path): string | null;
   submit(): void;
+  pop<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path>;
+  shift<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path>;
+  push<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void;
+  unshift<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void;
+  splice<Path extends ArrayPaths<T>>(
+    path: Path,
+    index?: number,
+    deleteCount?: number,
+    ...items: GetArray<T, Path>[]
+  ): void;
 }
 
 export interface _FormContext<T> extends FormContext<T> {
@@ -182,6 +194,40 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     return false;
   });
 
+  const setValue: FormContext<T>['setValue'] = (path, value) => {
+    const compiledPath = Array.isArray(path) ? path : toCompiledPath(path);
+    const stringPath = typeof path === 'string' ? path : compiledPath.join('.');
+
+    set(currentValues.value, compiledPath, cloneFn(value));
+
+    const meta = fields.get(stringPath);
+    const isDirty = !equalsFn(get(initialValues, compiledPath, Empty), value);
+    if (meta) {
+      meta.dirty = isDirty;
+    } else {
+      fields.set(stringPath, createFieldMeta(false, isDirty, '', 0));
+    }
+
+    // cleanup child fields
+    for (const [nestedPath, nestedMeta] of fields) {
+      if (nestedPath.startsWith(`${stringPath}.`)) {
+        if (nestedMeta !== undefined) {
+          if (nestedMeta.refCount === 0) {
+            fields.delete(nestedPath);
+          } else {
+            const compiledNestedPath = toCompiledPath(nestedPath);
+            nestedMeta.dirty = !equalsFn(
+              get(initialValues, compiledNestedPath),
+              get(currentValues.value, compiledNestedPath),
+            );
+          }
+        }
+      }
+    }
+
+    applyValidation();
+  };
+
   return {
     values: readonly(currentValues) as FormContext<T>['values'],
     dirty,
@@ -189,42 +235,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     __meta: fields,
     reset,
     resetField,
-    setValue<Path extends Paths<T>, Value extends Get<T, Path>>(
-      path: Path | CompiledPath,
-      value: Value | undefined,
-    ) {
-      const compiledPath = Array.isArray(path) ? path : toCompiledPath(path);
-      const stringPath = typeof path === 'string' ? path : compiledPath.join('.');
-
-      set(currentValues.value, compiledPath, cloneFn(value));
-
-      const meta = fields.get(stringPath);
-      const isDirty = !equalsFn(get(initialValues, compiledPath, Empty), value);
-      if (meta) {
-        meta.dirty = isDirty;
-      } else {
-        fields.set(stringPath, createFieldMeta(false, isDirty, '', 0));
-      }
-
-      // cleanup child fields
-      for (const [nestedPath, nestedMeta] of fields) {
-        if (nestedPath.startsWith(`${stringPath}.`)) {
-          if (nestedMeta !== undefined) {
-            if (nestedMeta.refCount === 0) {
-              fields.delete(nestedPath);
-            } else {
-              const compiledNestedPath = toCompiledPath(nestedPath);
-              nestedMeta.dirty = !equalsFn(
-                get(initialValues, compiledNestedPath),
-                get(currentValues.value, compiledNestedPath),
-              );
-            }
-          }
-        }
-      }
-
-      applyValidation();
-    },
+    setValue,
     getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value {
       const a = get(currentValues.value, Array.isArray(path) ? path : toCompiledPath(path));
       return cloneFn(toRaw(a));
@@ -272,6 +283,52 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     },
     getError<Path extends Paths<T>>(path: Path): string | null {
       return fields.get(path)?.error ?? null;
+    },
+    // arrays
+    pop<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path> {
+      const compiledPath = toCompiledPath(path);
+      const value = get(currentValues.value, compiledPath);
+      return Array.isArray(value) ? value.pop() : undefined;
+    },
+    shift<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path> {
+      const compiledPath = toCompiledPath(path);
+      const value = get(currentValues.value, compiledPath);
+      return Array.isArray(value) ? value.shift() : undefined;
+    },
+    push<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void {
+      const compiledPath = toCompiledPath(path);
+      const arr = get(currentValues.value, compiledPath);
+      if (Array.isArray(arr)) {
+        arr.push(cloneFn(value));
+      } else {
+        // @ts-expect-error GetArray/Get conversion
+        setValue(path, [cloneFn(value)]);
+      }
+    },
+    unshift<Path extends ArrayPaths<T>>(path: Path, value: GetArray<T, Path>): void {
+      const compiledPath = toCompiledPath(path);
+      const arr = get(currentValues.value, compiledPath);
+      if (Array.isArray(arr)) {
+        arr.unshift(cloneFn(value));
+      } else {
+        // @ts-expect-error GetArray/Get conversion
+        setValue(path, [cloneFn(value)]);
+      }
+    },
+    splice<Path extends ArrayPaths<T>>(
+      path: Path,
+      index?: number,
+      deleteCount?: number,
+      ...items: GetArray<T, Path>[]
+    ): void {
+      const compiledPath = toCompiledPath(path);
+      const arr = get(currentValues.value, compiledPath);
+      if (Array.isArray(arr)) {
+        arr.splice(index ?? 0, deleteCount ?? 0, ...(items ?? []).map((v) => cloneFn(v)));
+      } else if (Array.isArray(items)) {
+        // @ts-expect-error GetArray/Get conversion
+        setValue(path, items.map((v) => cloneFn(v)));
+      }
     },
   };
 }
