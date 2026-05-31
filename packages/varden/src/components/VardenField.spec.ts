@@ -7,15 +7,15 @@ import { useForm as useFormLib, type FormContext } from '../lib';
 import type { FieldMeta } from '../field-metadata';
 import VardenField from './VardenField.vue';
 
-function useForm<T>(
-  ...args: Parameters<typeof useFormLib<T>>
+function useForm<T, O>(
+  ...args: Parameters<typeof useFormLib<T, O>>
 ): FormContext<T> & { __meta: Map<string, FieldMeta> } {
-  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+  return useFormLib<T, O>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
 }
 
 describe('meta management', () => {
   it('should render field value through component', async () => {
-    const form = useForm<{ name: string }>({
+    const form = useForm({
       schema: v.object({ name: v.string() }),
       onSubmit: () => {},
     });
@@ -47,7 +47,7 @@ describe('meta management', () => {
   });
 
   it('should not reset field value when another component instance still references it', async () => {
-    const form = useForm<{ name: string }>({
+    const form = useForm({
       schema: v.object({ name: v.string() }),
       onSubmit: () => {},
     });

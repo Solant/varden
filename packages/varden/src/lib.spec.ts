@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import {
+  describe, expect, it, vi,
+} from 'vitest';
 import * as v from 'valibot';
 import { effectScope } from 'vue';
 
@@ -6,11 +8,44 @@ import { useForm as useFormLib, type FormContext } from './lib';
 import { useFieldValue } from './composables';
 import type { FieldMeta } from './field-metadata';
 
-function useForm<T>(
-  ...args: Parameters<typeof useFormLib<T>>
+function useForm<T, O>(
+  ...args: Parameters<typeof useFormLib<T, O>>
 ): FormContext<T> & { __meta: Map<string, FieldMeta> } {
-  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+  return useFormLib<T, O>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
 }
+
+describe('form submit', () => {
+  it('should submit form data without cloning issue', async () => {
+    const onSubmit = vi.fn();
+
+    const form = useForm({
+      schema: v.object({ name: v.string() }),
+      onSubmit,
+    });
+
+    form.setValue('name', 'Test');
+    form.submit();
+    expect(onSubmit).toHaveBeenCalledWith({ name: 'Test' });
+  });
+
+  it('should transform values according to schema', () => {
+    const onSubmit = vi.fn();
+
+    const form = useForm({
+      schema: v.object({
+        name: v.pipe(
+          v.string(),
+          v.transform((input) => input.length),
+        ),
+      }),
+      onSubmit,
+    });
+
+    form.setValue('name', 'Test');
+    form.submit();
+    expect(onSubmit).toHaveBeenCalledWith({ name: 4 });
+  });
+});
 
 describe('meta management', () => {
   it('should not reset field that is currently referenced', () => {
