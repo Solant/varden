@@ -22,10 +22,10 @@ import { createFieldMeta, type FieldMeta } from './field-metadata';
 
 type PartialDeep<T> = T extends object ? { [K in keyof T]?: PartialDeep<T[K]> } : Partial<T>;
 
-interface FormProps<T> {
-  schema: StandardSchemaV1<T>;
+interface FormProps<T, O> {
+  schema: StandardSchemaV1<T, O>;
   initial?: PartialDeep<T>;
-  onSubmit: (value: T) => Promise<void> | void;
+  onSubmit: (value: O) => Promise<void> | void;
   cloneFn?: <A>(arg: A) => A;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   equalsFn?: (a: any, b: any) => boolean;
@@ -69,11 +69,11 @@ function strictEqualsFn(a: any, b: any): boolean {
 }
 
 // eslint-disable-next-line no-underscore-dangle
-let _equalsFn: FormProps<unknown>['equalsFn'] & {} = strictEqualsFn;
+let _equalsFn: FormProps<unknown, unknown>['equalsFn'] & {} = strictEqualsFn;
 // eslint-disable-next-line no-underscore-dangle
-let _cloneFn: FormProps<unknown>['cloneFn'] & {} = structuredClone;
+let _cloneFn: FormProps<unknown, unknown>['cloneFn'] & {} = structuredClone;
 
-export function defineVardenConfig(config: { equalsFn?: FormProps<unknown>['equalsFn']; cloneFn?: FormProps<unknown>['cloneFn'] }) {
+export function defineVardenConfig(config: { equalsFn?: FormProps<unknown, unknown>['equalsFn']; cloneFn?: FormProps<unknown, unknown>['cloneFn'] }) {
   if (config.equalsFn) _equalsFn = config.equalsFn;
   if (config.cloneFn) _cloneFn = config.cloneFn;
 }
@@ -83,13 +83,14 @@ export function resetVardenConfig() {
   _cloneFn = structuredClone;
 }
 
-export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
+export function useForm<T, O>(props: FormProps<T, O>): FormContext<T> {
   const {
     initial, schema, onSubmit, cloneFn = _cloneFn, equalsFn = _equalsFn,
   } = props;
 
   const initialValues: PartialDeep<T> = cloneFn(initial ?? {} as PartialDeep<T>);
 
+  let outputValues: O | undefined;
   const currentValues = ref<PartialDeep<T>>(cloneFn(initialValues));
   const fields = reactive(new Map<string, FieldMeta>());
   const valid = ref(true);
@@ -151,8 +152,13 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
     }
   };
 
-  async function applyValidation() {
-    const result = await schema['~standard'].validate(currentValues.value);
+  function applyValidation() {
+    // TODO: allow async validation
+    const result = schema['~standard'].validate(currentValues.value) as StandardSchemaV1.Result<O>;
+
+    if ('value' in result) {
+      outputValues = result.value;
+    }
 
     const issues = [...(result.issues ?? [])];
     const paths = issues.map(getIssuePath);
@@ -252,8 +258,7 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
         return;
       }
 
-      // TODO: properly coerce/transform validation result
-      onSubmit(cloneFn(currentValues.value));
+      onSubmit(outputValues!);
     },
     isDirty<Path extends Paths<T>>(path: Path): boolean {
       // TODO: consider shipping dequal for deep equality
@@ -266,10 +271,17 @@ export function useForm<T = object>(props: FormProps<T>): FormContext<T> {
         );
       }
 
+      // TODO: refactor to track dirty state
+      let self: FieldMeta | null = null;
       for (const [field, meta] of fields) {
-        if (field === path) return meta.dirty;
+        if (field === path) {
+          self = meta;
+          // eslint-disable-next-line no-continue
+          continue;
+        }
         if (field.startsWith(`${path}.`) && meta.dirty === true) return true;
       }
+      if (self !== null) return self.dirty;
 
       // TODO: should be tracked after first check?
       const compiledPath = toCompiledPath(path);

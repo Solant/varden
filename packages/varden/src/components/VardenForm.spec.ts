@@ -10,17 +10,17 @@ import VardenForm from './VardenForm.vue';
 import VardenField from './VardenField.vue';
 import type { FieldMeta } from '../field-metadata';
 
-function useForm<T>(
-  ...args: Parameters<typeof useFormLib<T>>
+function useForm<T, O>(
+  ...args: Parameters<typeof useFormLib<T, O>>
 ): FormContext<T> & { __meta: Map<string, FieldMeta> } {
-  return useFormLib<T>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
+  return useFormLib<T, O>(...args) as FormContext<T> & { __meta: Map<string, FieldMeta> };
 }
 
 describe('meta management', () => {
   it('should preserve values when fields are actively referenced', async () => {
     const onSubmit = vi.fn();
-    const form = useForm<{ name: string; email: string }>({
-      schema: v.object({ name: v.string(), email: v.string() }),
+    const form = useForm({
+      schema: v.object({ name: v.optional(v.string()), email: v.optional(v.string()) }),
       onSubmit,
     });
 
@@ -52,7 +52,7 @@ describe('meta management', () => {
 
   it('should reset form values when reset is called', async () => {
     const onSubmit = vi.fn();
-    const form = useForm<{ name: string }>({
+    const form = useForm({
       schema: v.object({ name: v.string() }),
       initial: { name: 'Initial' },
       onSubmit,
@@ -81,7 +81,7 @@ describe('meta management', () => {
 
   it('should not reset field data preemptively while component still references it', async () => {
     const onSubmit = vi.fn();
-    const form = useForm<{ name: string }>({
+    const form = useForm({
       schema: v.object({ name: v.string() }),
       onSubmit,
     });
