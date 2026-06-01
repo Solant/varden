@@ -3,7 +3,7 @@ export {
 } from './lib';
 
 export {
-  useFieldValue, useFieldDirty, useFieldError, useFieldTouched, useField,
+  useFieldValue, useFieldDirty, useFieldErrors, useFieldTouched, useField,
 } from './composables';
 
 export { default as VardenForm } from './components/VardenForm.vue';

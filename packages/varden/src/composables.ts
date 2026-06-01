@@ -32,7 +32,7 @@ function acquireField<T, Path extends Paths<T>>(form: FormContext<T>, path: Path
     return;
   }
 
-  (form as _FormContext<T>).__meta.set(path, createFieldMeta(false, false, '', 1));
+  (form as _FormContext<T>).__meta.set(path, createFieldMeta(false, false, null, 1));
 }
 
 export function useFieldDirty<T, Path extends Paths<T>>(
@@ -75,11 +75,11 @@ export function useFieldValue<T>(
   });
 }
 
-export function useFieldError<T, Path extends Paths<T>>(
+export function useFieldErrors<T, Path extends Paths<T>>(
   form: FormContext<T>,
   path: MaybeRefOrGetter<Path>,
-): ComputedRef<string | null> {
-  return computed(() => form.getError(toValue(path)));
+): ComputedRef<Readonly<string[]> | null> {
+  return computed(() => form.getErrors(toValue(path)));
 }
 
 export function useField<T>(
@@ -88,15 +88,15 @@ export function useField<T>(
 ): [
   modelValue: WritableComputedRef<Get<T, Paths<T>>>,
   touch: () => void,
-  error: ComputedRef<string | null>,
+  errors: ComputedRef<Readonly<string[]> | null>,
 ] {
   const modelValue = useFieldValue(form, path);
   const touch = () => form.setTouched(toValue(path), true);
-  const error = useFieldError(form, path);
+  const errors = useFieldErrors(form, path);
 
   return [
     modelValue,
     touch,
-    error,
+    errors,
   ] as const;
 }

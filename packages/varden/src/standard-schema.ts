@@ -68,9 +68,25 @@ export declare namespace StandardSchemaV1 {
   export type InferOutput<Schema extends StandardSchemaV1> = NonNullable<Schema['~standard']['types']>['output'];
 }
 
-export function getIssuePath(issue: StandardSchemaV1.Issue) {
+interface GenericIssue {
+  path?: string;
+  message: string;
+}
+
+export function getIssues(issues?: readonly StandardSchemaV1.Issue[]): GenericIssue[] {
+  if (issues === undefined) {
+    return [];
+  }
+
+  return issues.map((issue) => ({
+    path: getIssuePath(issue),
+    message: issue.message,
+  }));
+}
+
+function getIssuePath(issue: StandardSchemaV1.Issue) {
   if (!issue.path) {
-    return '';
+    return issue.path;
   }
 
   const propertyKeys = issue.path.map((p) => {

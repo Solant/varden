@@ -8,7 +8,7 @@ import {
   type DeepReadonly,
 } from 'vue';
 
-import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
+import { getIssues, type StandardSchemaV1 } from './standard-schema';
 import {
   type Paths, type Get, get, set, del, toCompiledPath,
   Empty,
@@ -46,7 +46,7 @@ export interface FormContext<T> {
   isTouched<Path extends Paths<T>>(path: Path): boolean;
   valid: Ref<boolean>;
   isDirty<Path extends Paths<T>>(path: Path): boolean;
-  getError<Path extends Paths<T>>(path: Path): string | null;
+  getErrors<Path extends Paths<T>>(path: Path): string[] | null;
   submit(): void;
   pop<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path>;
   shift<Path extends ArrayPaths<T>>(path: Path): undefined | GetArray<T, Path>;
@@ -161,34 +161,41 @@ export function useForm<T, O>(props: FormProps<T, O>): FormContext<T> {
       outputValues = result.value;
     }
 
-    const issues = [...(result.issues ?? [])];
-    const paths = issues.map(getIssuePath);
+    const issues = getIssues(result.issues);
 
     valid.value = issues.length === 0;
 
     for (const [field, meta] of fields) {
-      const index = paths.indexOf(field);
-      if (index === -1) {
-        meta.error = '';
+      const fieldIssues = issues.filter((val) => val.path === field);
+      if (fieldIssues.length === 0) {
+        meta.error = null;
         // eslint-disable-next-line no-continue
         continue;
+      } else {
+        meta.error = fieldIssues.map((val) => val.message);
       }
 
-      meta.error = issues[index]!.message;
-
-      issues.splice(index, 1);
-      paths.splice(index, 1);
+      for (let i = 0; i < fieldIssues.length; i += 1) {
+        issues.splice(issues.indexOf(fieldIssues[i]!), 1);
+      }
     }
     if (!issues.length) {
       return;
     }
 
     // proceed with unregistered paths
-    for (let index = 0; index < paths.length; index += 1) {
-      const path = paths[index]!;
-      const error = issues[index]!.message;
+    for (let index = 0; index < issues.length; index += 1) {
+      const { path, message } = issues[index]!;
+      if (!path) {
+        // eslint-disable-next-line no-continue
+        continue;
+      }
 
-      fields.set(path, createFieldMeta(false, false, error, 0));
+      if (fields.has(path)) {
+        fields.get(path)!.error!.push(message);
+      } else {
+        fields.set(path, createFieldMeta(false, false, [message], 0));
+      }
     }
   }
 
@@ -212,7 +219,7 @@ export function useForm<T, O>(props: FormProps<T, O>): FormContext<T> {
     if (meta) {
       meta.dirty = isDirty;
     } else {
-      fields.set(stringPath, createFieldMeta(false, isDirty, '', 0));
+      fields.set(stringPath, createFieldMeta(false, isDirty, null, 0));
     }
 
     // cleanup child fields
@@ -297,7 +304,7 @@ export function useForm<T, O>(props: FormProps<T, O>): FormContext<T> {
     isTouched<Path extends Paths<T>>(path: Path): boolean {
       return fields.get(path)?.touched ?? false;
     },
-    getError<Path extends Paths<T>>(path: Path): string | null {
+    getErrors<Path extends Paths<T>>(path: Path): string[] | null {
       return fields.get(path)?.error ?? null;
     },
     // arrays
