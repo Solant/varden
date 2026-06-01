@@ -40,16 +40,16 @@ Remember to pass `form` prop to both form and field components and apply `field`
 
 <template>
   <varden-form :form>
-    <varden-input :form path="name" v-slot="{ field, error }">
+    <varden-input :form path="name" v-slot="{ field, errors }">
       <label>Name</label>
       <input v-bind="field" />
-      {{ error }}
+      {{ errors }}
     </varden-input>
 
-    <varden-input :form path="password" v-slot="{ field, error }">
+    <varden-input :form path="password" v-slot="{ field, errors }">
       <label>Password</label>
       <input v-bind="field" />
-      {{ error }}
+      {{ errors }}
     </varden-input>
     
     <button type="submit">Submit</button>
@@ -75,19 +75,19 @@ is more flexible but requires more boilerplate code. You can use it if you want 
     },
   })
   
-  const [name, nameBlur, nameError] = form.useField('name')
-  const [password, passwordBlur, passwordError] = form.useField('password')
+  const [name, nameBlur, nameErrors] = form.useField('name')
+  const [password, passwordBlur, passwordErrors] = form.useField('password')
 </script>
 
 <template>
   <form @submit.prevent="form.submit" @reset.prevent="form.reset">
     <label>Name</label>
     <input v-model="name" @blur="nameBlur" />
-    {{ nameError }}
+    {{ nameErrors }}
 
-    <label>Name</label>
+    <label>Password</label>
     <input v-model="password" @blur="passwordBlur" />
-    {{ passwordError }}
+    {{ passwordErrors }}
 
     <button type="submit">Submit</button>
   </form>

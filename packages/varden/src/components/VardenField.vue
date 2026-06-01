@@ -11,7 +11,7 @@ const props = defineProps<{
 const [
   modelValue,
   onBlur,
-  error,
+  errors,
 ] = useField(props.form, props.path);
 
 function update(value: Get<T, Path>) {
@@ -22,6 +22,6 @@ function update(value: Get<T, Path>) {
 <template>
   <slot
     :field="{ modelValue, 'onUpdate:modelValue': update, onBlur }"
-    :error
+    :errors
   />
 </template>
