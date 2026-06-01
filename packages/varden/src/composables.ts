@@ -68,7 +68,7 @@ export function useFieldValue<T>(
   }, true);
 
   return computed({
-    get: () => form.getValue(compiledPath.value),
+    get: () => form.getValue(compiledPath.value) as Get<T, Paths<T>>,
     set(value) {
       form.setValue(compiledPath.value, value);
     },
