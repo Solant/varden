@@ -6,7 +6,6 @@ import {
   type ComputedRef,
   type Ref,
   type DeepReadonly,
-  toRaw,
 } from 'vue';
 
 import { getIssuePath, type StandardSchemaV1 } from './standard-schema';
@@ -40,7 +39,9 @@ export interface FormContext<T> {
     path: Path | CompiledPath,
     value: Value | undefined,
   ): void;
-  getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value;
+  getValue<Path extends Paths<T>, Value extends Get<T, Path>>(
+    path: Path | CompiledPath,
+  ): DeepReadonly<Value> | undefined;
   setTouched<Path extends Paths<T>>(path: Path, flag?: boolean): void;
   isTouched<Path extends Paths<T>>(path: Path): boolean;
   valid: Ref<boolean>;
@@ -234,17 +235,20 @@ export function useForm<T, O>(props: FormProps<T, O>): FormContext<T> {
     applyValidation();
   };
 
+  const values = readonly(currentValues) as FormContext<T>['values'];
+
   return {
-    values: readonly(currentValues) as FormContext<T>['values'],
+    values,
     dirty,
     // @ts-expect-error private field
     __meta: fields,
     reset,
     resetField,
     setValue,
-    getValue<Path extends Paths<T>, Value extends Get<T, Path>>(path: Path | CompiledPath): Value {
-      const a = get(currentValues.value, Array.isArray(path) ? path : toCompiledPath(path));
-      return cloneFn(toRaw(a));
+    getValue<Path extends Paths<T>, Value extends Get<T, Path>>(
+      path: Path | CompiledPath,
+    ): DeepReadonly<Value> | undefined {
+      return get(values.value, Array.isArray(path) ? path : toCompiledPath(path));
     },
     setTouched<Path extends Paths<T>>(path: Path, flag = true) {
       fields.get(path)!.touched = flag;

@@ -170,6 +170,7 @@ describe('form.setValue object', () => {
     });
     form.setValue('user', { name: 'initial' });
     const a = form.getValue('user');
+    // @ts-expect-error omit readonly for testing purposes
     a.name = 'changed';
     expect(form.values.value.user?.name).toBe('initial');
   });
